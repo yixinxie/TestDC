@@ -1,9 +1,11 @@
 #include "qef.h"
 #include <glm/glm.hpp>
 #include "SamplerFunction.h"
+/*
 #define SOLVER_ADD_X(_param, _p, _q, _r) if((_param)->intersects.x >= 0){solver.add(Vec3((_param)->intersects.x + min.x + _p, min.y + _q, min.z + _r), Vec3((_param)->normal[0].x, (_param)->normal[0].y, (_param)->normal[0].z));intersects++;}
 #define SOLVER_ADD_Y(_param, _p, _q, _r) if((_param)->intersects.y >= 0){solver.add(Vec3(min.x + _p, (_param)->intersects.y + min.y + _q, min.z + _r), Vec3((_param)->normal[1].x, (_param)->normal[1].y, (_param)->normal[1].z));intersects++;}
 #define SOLVER_ADD_Z(_param, _p, _q, _r) if((_param)->intersects.z >= 0){solver.add(Vec3(min.x + _p, min.y + _q, (_param)->intersects.z + min.z + _r), Vec3((_param)->normal[2].x, (_param)->normal[2].y, (_param)->normal[2].z));intersects++;}
+*/
 using namespace glm;
 using namespace svd;
 struct NodeData{
@@ -72,9 +74,33 @@ public:
 			min.y + childInc[childIndex * 3 + 1] * childSize,
 			min.z + childInc[childIndex * 3 + 2] * childSize);
 	}
+	inline void solverAddX(NodeData* _dat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+		if (_dat->intersects.x >= 0){
+			solver.add(
+				Vec3(_x + _dat->intersects.x, _y, _z),
+				Vec3(_dat->normal[0].x, _dat->normal[0].y, _dat->normal[0].z));
+			intersectionCount++;
+		}
+	}
+	inline void solverAddY(NodeData* _dat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+		if (_dat->intersects.y >= 0){
+			solver.add(
+				Vec3(_x, _y + _dat->intersects.y, _z),
+				Vec3(_dat->normal[1].x, _dat->normal[1].y, _dat->normal[1].z));
+			intersectionCount++;
+		}
+	}
+	inline void solverAddZ(NodeData* _dat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+		if (_dat->intersects.z >= 0){
+			solver.add(
+				Vec3(_x, _y, _z + _dat->intersects.z),
+				Vec3(_dat->normal[2].x, _dat->normal[2].y, _dat->normal[2].z));
+			intersectionCount++;
+		}
+	}
 
 	NodeData* readLeafData(const OctreeNode* curNode, const ivec3& pos);
 	void writeDataToNode(const ivec3& pos, const NodeData* val);
 	void performSDF(SamplerFunction* sampler);
-	void generateMinimizers(void);
+	static void generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode);
 };

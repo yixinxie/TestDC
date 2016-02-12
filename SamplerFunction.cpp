@@ -38,11 +38,11 @@ int SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, v
 		if (pos.x <= rectMin.x && pos.x + 1 >= rectMin.x){
 
 			*outNormal0 = vec3(-1, 0, 0);
-			intersects->x = rectMin.x;
+			intersects->x = rectMin.x - pos.x;
 		}
 		else if( pos.x <= rectMax.x && pos.x + 1>= rectMax.x){
 			*outNormal0 = vec3(1, 0, 0);
-			intersects->x = rectMax.x;
+			intersects->x = rectMax.x - pos.x;
 		}
 	}
 	if (pos.x >= rectMin.x && pos.x <= rectMax.x &&
@@ -50,11 +50,11 @@ int SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, v
 		if (pos.y <= rectMin.y && pos.y + 1 >= rectMin.y){
 
 			*outNormal1 = vec3(0, -1, 0);
-			intersects->y = rectMin.y;
+			intersects->y = rectMin.y - pos.y;
 		}
 		else if (pos.y <= rectMax.y && pos.y + 1 >= rectMax.y){
 			*outNormal1 = vec3(0, 1, 0);
-			intersects->y = rectMax.y;
+			intersects->y = rectMax.y - pos.y;
 		}
 	}
 	if (pos.y >= rectMin.y && pos.y <= rectMax.y &&
@@ -62,11 +62,11 @@ int SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, v
 		if (pos.z <= rectMin.z && pos.z + 1 >= rectMin.z){
 
 			*outNormal2 = vec3(0, 0, -1);
-			intersects->z = rectMin.z;
+			intersects->z = rectMin.z - pos.z;
 		}
 		else if (pos.z <= rectMax.z && pos.z + 1 >= rectMax.z){
 			*outNormal2 = vec3(0, 0, 1);
-			intersects->z = rectMax.z;
+			intersects->z = rectMax.z - pos.z;
 		}
 	}
 

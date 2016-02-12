@@ -28,7 +28,7 @@ void OctreeNode::performSDF(SamplerFunction* sampler){
 				//		val.normal[2].x, val.normal[2].y, val.normal[2].z
 				//		);
 				//}
-				writeDataToNode(pos, &val);
+				if (val.intersects.x >= 0 || val.intersects.y >= 0 || val.intersects.z >= 0)writeDataToNode(pos, &val);
 			}
 		}
 	}
@@ -70,62 +70,65 @@ NodeData* OctreeNode::readLeafData(const OctreeNode* curNode, const ivec3& pos){
 	if (curNode->children[childIndex] == nullptr)return nullptr;
 	return readLeafData(curNode->children[childIndex], pos);
 }
-void OctreeNode::generateMinimizers(){
+
+void OctreeNode::generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode){
 	const float QEF_ERROR = 1e-6f;
 	const int QEF_SWEEPS = 4;
 	QefSolver solver;
 	Vec3 res;
 
-	if (size != 1){
+	if (curNode->size != 1){
 		for (int i = 0; i < 8; i++){
-			if (children[i] != nullptr)children[i]->generateMinimizers();
+			if (curNode->children[i] != nullptr)generateMinimizers(curNode->children[i], rootNode);
 		}
 	}
 	else{
 		// find the intersection points on all 12 edges.
 
-		int intersects = 0;
+		int intersectionCount = 0;
+		vec3 min = curNode->min;
 		// starting from the minimal edges of this cell.
-		SOLVER_ADD_X(data, 0, 0, 0);
-		SOLVER_ADD_Y(data, 0, 0, 0);
-		SOLVER_ADD_Z(data, 0, 0, 0);
+		curNode->solverAddX(curNode->data, solver, intersectionCount, 0, 0, 0);
+		curNode->solverAddY(curNode->data, solver, intersectionCount, 0, 0, 0);
+		curNode->solverAddZ(curNode->data, solver, intersectionCount, 0, 0, 0);
 		// find edges that are minimal edges of positive-adjacent cells.
 		NodeData* adjacentData = nullptr;
-		adjacentData = readLeafData(this, vec3(min.x + 1, min.y, min.z));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_Y(adjacentData, 1, 0, 0);
-			SOLVER_ADD_Z(adjacentData, 1, 0, 0);
+
+			curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 0);
+			curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 0, 0);
 		}
-		adjacentData = readLeafData(this, vec3(min.x, min.y + 1, min.z));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_X(adjacentData, 0, 1, 0);
-			SOLVER_ADD_Z(adjacentData, 0, 1, 0);
+			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 0);
+			curNode->solverAddZ(adjacentData, solver, intersectionCount, 0, 1, 0);
 		}
-		adjacentData = readLeafData(this, vec3(min.x, min.y, min.z + 1));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y, min.z + 1));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_X(adjacentData, 0, 0, 1);
-			SOLVER_ADD_Y(adjacentData, 0, 0, 1);
+			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 0, 1);
+			curNode->solverAddY(adjacentData, solver, intersectionCount, 0, 0, 1);
 		}
-		adjacentData = readLeafData(this, vec3(min.x + 1, min.y + 1, min.z));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y + 1, min.z));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_Z(adjacentData, 1, 1, 0);
+			curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 1, 0);
 		}
-		adjacentData = readLeafData(this, vec3(min.x + 1, min.y, min.z + 1));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z + 1));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_Y(adjacentData, 1, 0, 1);
+			curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 1);
 		}
-		adjacentData = readLeafData(this, vec3(min.x, min.y + 1, min.z + 1));
+		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z + 1));
 		if (adjacentData != nullptr){
-			SOLVER_ADD_X(adjacentData, 0, 1, 1);
+			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 1);
 		}
 
-		if (intersects > 0)
+		if (intersectionCount > 0)
 		{
 			solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
-			data->minimizer = vec3(res.x, res.y, res.z);
-
-			printf_s("%f, %f, %f\n", res.x, res.y, res.z);
-			data->qefData = solver.getData();
+			curNode->data->minimizer = vec3(res.x, res.y, res.z);
+			curNode->data->minimizer += min;
+			printf_s("%f, %f, %f\n", curNode->data->minimizer.x, curNode->data->minimizer.y, curNode->data->minimizer.z);
+			curNode->data->qefData = solver.getData();
 		}
 	}
 }

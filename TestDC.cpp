@@ -29,7 +29,7 @@ void main(void){
 	((SF_Box*)sampler)->setSpecs(vec3(0.5f,0.5f,0.5f), vec3(1.5f,1.5f,1.5f));
 	root.performSDF(sampler);
 	
-	root.generateMinimizers();
+	OctreeNode::generateMinimizers(&root, &root);
 	
 	getchar();
 }

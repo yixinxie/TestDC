@@ -1,7 +1,11 @@
 #include "qef.h"
 #include <glm/glm.hpp>
 #include "SamplerFunction.h"
+#define SOLVER_ADD_X(_param, _p, _q, _r) if((_param)->intersects.x >= 0){solver.add(Vec3((_param)->intersects.x + min.x + _p, min.y + _q, min.z + _r), Vec3((_param)->normal[0].x, (_param)->normal[0].y, (_param)->normal[0].z));intersects++;}
+#define SOLVER_ADD_Y(_param, _p, _q, _r) if((_param)->intersects.y >= 0){solver.add(Vec3(min.x + _p, (_param)->intersects.y + min.y + _q, min.z + _r), Vec3((_param)->normal[1].x, (_param)->normal[1].y, (_param)->normal[1].z));intersects++;}
+#define SOLVER_ADD_Z(_param, _p, _q, _r) if((_param)->intersects.z >= 0){solver.add(Vec3(min.x + _p, min.y + _q, (_param)->intersects.z + min.z + _r), Vec3((_param)->normal[2].x, (_param)->normal[2].y, (_param)->normal[2].z));intersects++;}
 using namespace glm;
+using namespace svd;
 struct NodeData{
 public:
 	svd::QefData qefData;
@@ -33,6 +37,17 @@ public:
 	*/
 
 };
+const int childInc[24] = {
+	0, 0, 0,
+	1, 0, 0,
+	0, 1, 0,
+	1, 1, 0,
+
+	0, 0, 1,
+	1, 0, 1,
+	0, 1, 1,
+	1, 1, 1,
+};
 class OctreeNode{
 private:
 	OctreeNode* children[8];
@@ -46,13 +61,19 @@ public:
 		}
 		data = nullptr;
 	}
-	void expand(void);
-	void initData(void);
-
 	~OctreeNode(){
 		if (data != nullptr)delete data;
 	}
+	void expand(void);
+	inline void createChild(int childIndex){
+		int childSize = size / 2;
+		children[childIndex] = new OctreeNode(childSize,
+			min.x + childInc[childIndex * 3] * childSize,
+			min.y + childInc[childIndex * 3 + 1] * childSize,
+			min.z + childInc[childIndex * 3 + 2] * childSize);
+	}
 
+	NodeData* readLeafData(const OctreeNode* curNode, const ivec3& pos);
 	void writeDataToNode(const ivec3& pos, const NodeData* val);
 	void performSDF(SamplerFunction* sampler);
 	void generateMinimizers(void);

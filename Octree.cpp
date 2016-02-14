@@ -29,6 +29,7 @@ void OctreeNode::performSDF(SamplerFunction* sampler){
 				//		);
 				//}
 				if (val.intersects.x >= 0 || val.intersects.y >= 0 || val.intersects.z >= 0)writeDataToNode(pos, &val);
+				//writeDataToNode(pos, &val);
 			}
 		}
 	}
@@ -56,9 +57,14 @@ void OctreeNode::writeDataToNode(const ivec3& pos, const NodeData* val){
 	children[childIndex]->writeDataToNode(pos, val);
 
 }
-NodeData* OctreeNode::readLeafData(const OctreeNode* curNode, const ivec3& pos){
+NodeData* OctreeNode::readLeafData(OctreeNode* curNode, const ivec3& pos){
+	OctreeNode* ret = readLeafNode(curNode, pos);
+	
+	return (ret != nullptr) ? ret->data : nullptr;
+}
+OctreeNode* OctreeNode::readLeafNode(OctreeNode* curNode, const ivec3& pos){
 	if (curNode->size == 1){
-		return curNode->data;
+		return curNode;
 	}
 
 	vec3 local = pos - curNode->min;
@@ -68,67 +74,105 @@ NodeData* OctreeNode::readLeafData(const OctreeNode* curNode, const ivec3& pos){
 	int c2 = (local.z >= halfSize) ? 4 : 0;
 	int childIndex = c0 + c1 + c2;
 	if (curNode->children[childIndex] == nullptr)return nullptr;
-	return readLeafData(curNode->children[childIndex], pos);
+	return readLeafNode(curNode->children[childIndex], pos);
 }
+void OctreeNode::generateMinimizers(OctreeNode* rootNode){
+	std::vector<ivec3> adjacentList;
+	_generateMinimizers(rootNode, rootNode, adjacentList);
+	for (auto it = adjacentList.begin(); it != adjacentList.end(); it++){
+		if (it->x < 0 || it->y < 0 || it->z < 0)continue;
+		OctreeNode* node = rootNode->readLeafNode(rootNode, *it);
+		if (node == nullptr){
+			NodeData emptyData;
 
-void OctreeNode::generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode){
-	const float QEF_ERROR = 1e-6f;
-	const int QEF_SWEEPS = 4;
-	QefSolver solver;
-	Vec3 res;
+			rootNode->writeDataToNode(*it, &emptyData);
+			node = rootNode->readLeafNode(rootNode, *it);
+			generateLeafMinimizer(node, rootNode);
+		}
+	}
+}
+void OctreeNode::_generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode, std::vector<glm::ivec3>& adjacentList){
 
 	if (curNode->size != 1){
 		for (int i = 0; i < 8; i++){
-			if (curNode->children[i] != nullptr)generateMinimizers(curNode->children[i], rootNode);
+			if (curNode->children[i] != nullptr){
+				
+				_generateMinimizers(curNode->children[i], rootNode, adjacentList);
+			}
 		}
 	}
 	else{
-		// find the intersection points on all 12 edges.
+		bool adjacentVisit = generateLeafMinimizer(curNode, rootNode);
+		if (adjacentVisit){
+			adjacentList.push_back(curNode->min + ivec3(-1, 0, 0));
+			adjacentList.push_back(curNode->min + ivec3(0, -1, 0));
+			adjacentList.push_back(curNode->min + ivec3(0, 0, -1));
 
-		int intersectionCount = 0;
-		vec3 min = curNode->min;
-		// starting from the minimal edges of this cell.
-		curNode->solverAddX(curNode->data, solver, intersectionCount, 0, 0, 0);
-		curNode->solverAddY(curNode->data, solver, intersectionCount, 0, 0, 0);
-		curNode->solverAddZ(curNode->data, solver, intersectionCount, 0, 0, 0);
-		// find edges that are minimal edges of positive-adjacent cells.
-		NodeData* adjacentData = nullptr;
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z));
-		if (adjacentData != nullptr){
-
-			curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 0);
-			curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 0, 0);
-		}
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z));
-		if (adjacentData != nullptr){
-			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 0);
-			curNode->solverAddZ(adjacentData, solver, intersectionCount, 0, 1, 0);
-		}
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y, min.z + 1));
-		if (adjacentData != nullptr){
-			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 0, 1);
-			curNode->solverAddY(adjacentData, solver, intersectionCount, 0, 0, 1);
-		}
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y + 1, min.z));
-		if (adjacentData != nullptr){
-			curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 1, 0);
-		}
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z + 1));
-		if (adjacentData != nullptr){
-			curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 1);
-		}
-		adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z + 1));
-		if (adjacentData != nullptr){
-			curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 1);
-		}
-
-		if (intersectionCount > 0)
-		{
-			solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
-			curNode->data->minimizer = vec3(res.x, res.y, res.z);
-			curNode->data->minimizer += min;
-			printf_s("%f, %f, %f\n", curNode->data->minimizer.x, curNode->data->minimizer.y, curNode->data->minimizer.z);
-			curNode->data->qefData = solver.getData();
+			adjacentList.push_back(curNode->min + ivec3(-1, -1, 0));
+			adjacentList.push_back(curNode->min + ivec3(0, -1, -1));
+			adjacentList.push_back(curNode->min + ivec3(-1, 0, -1));
 		}
 	}
+	
+}
+bool OctreeNode::generateLeafMinimizer(OctreeNode* curNode, OctreeNode* rootNode){
+	
+	const float QEF_ERROR = 1e-6f;
+	const int QEF_SWEEPS = 4;
+	QefSolver solver;
+	// here we presume curNode is a leaf node.
+	// find the intersection points on all 12 edges.
+	int intersectionCount = 0;
+	vec3 min = curNode->min;
+	// starting from the minimal edges of this cell.
+	
+	curNode->solverAddX(curNode->data, solver, intersectionCount, 0, 0, 0);
+	curNode->solverAddY(curNode->data, solver, intersectionCount, 0, 0, 0);
+	curNode->solverAddZ(curNode->data, solver, intersectionCount, 0, 0, 0);
+	/* at this point, if the intersection count is non-zero, that means one or more intersections
+	exist on the minimal axis. they could be on the maximal axis of the negative-adjacent cells.
+	and those cells need to be visited to calculate their minimizers;
+	*/
+	bool hasIntersectionOnMinAxis = intersectionCount > 0;
+	// find edges that are minimal edges of positive-adjacent cells.
+	NodeData* adjacentData = nullptr;
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z));
+	if (adjacentData != nullptr){
+		curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 0);
+		curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 0, 0);
+	}
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z));
+	if (adjacentData != nullptr){
+		curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 0);
+		curNode->solverAddZ(adjacentData, solver, intersectionCount, 0, 1, 0);
+	}
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y, min.z + 1));
+	if (adjacentData != nullptr){
+		curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 0, 1);
+		curNode->solverAddY(adjacentData, solver, intersectionCount, 0, 0, 1);
+	}
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y + 1, min.z));
+	if (adjacentData != nullptr){
+		curNode->solverAddZ(adjacentData, solver, intersectionCount, 1, 1, 0);
+	}
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x + 1, min.y, min.z + 1));
+	if (adjacentData != nullptr){
+		curNode->solverAddY(adjacentData, solver, intersectionCount, 1, 0, 1);
+	}
+	adjacentData = curNode->readLeafData(rootNode, ivec3(min.x, min.y + 1, min.z + 1));
+	if (adjacentData != nullptr){
+		curNode->solverAddX(adjacentData, solver, intersectionCount, 0, 1, 1);
+	}
+
+	if (intersectionCount > 0)
+	{
+		Vec3 res;
+		solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+		curNode->data->minimizer = vec3(res.x, res.y, res.z);
+		curNode->data->minimizer += min;
+		printf_s("%f, %f, %f\n", curNode->data->minimizer.x, curNode->data->minimizer.y, curNode->data->minimizer.z);
+		//curNode->data->qefData = solver.getData();
+	}
+	curNode->data->processed = 1;
+	return hasIntersectionOnMinAxis;
 }

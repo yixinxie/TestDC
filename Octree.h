@@ -1,16 +1,14 @@
+#include <vector>
 #include "qef.h"
 #include <glm/glm.hpp>
 #include "SamplerFunction.h"
-/*
-#define SOLVER_ADD_X(_param, _p, _q, _r) if((_param)->intersects.x >= 0){solver.add(Vec3((_param)->intersects.x + min.x + _p, min.y + _q, min.z + _r), Vec3((_param)->normal[0].x, (_param)->normal[0].y, (_param)->normal[0].z));intersects++;}
-#define SOLVER_ADD_Y(_param, _p, _q, _r) if((_param)->intersects.y >= 0){solver.add(Vec3(min.x + _p, (_param)->intersects.y + min.y + _q, min.z + _r), Vec3((_param)->normal[1].x, (_param)->normal[1].y, (_param)->normal[1].z));intersects++;}
-#define SOLVER_ADD_Z(_param, _p, _q, _r) if((_param)->intersects.z >= 0){solver.add(Vec3(min.x + _p, min.y + _q, (_param)->intersects.z + min.z + _r), Vec3((_param)->normal[2].x, (_param)->normal[2].y, (_param)->normal[2].z));intersects++;}
-*/
+
 using namespace glm;
 using namespace svd;
 struct NodeData{
 public:
-	svd::QefData qefData;
+	//svd::QefData qefData;
+	unsigned char processed;
 	glm::vec3 minimizer;
 
 	// terrain data
@@ -26,7 +24,7 @@ public:
 	*/
 	glm::vec3 intersects; 
 	glm::vec3 normal[3]; // the 3 normals associated with the 3 points.
-	NodeData() :intersects(glm::vec3(-1)), material(0){
+	NodeData() :intersects(glm::vec3(-1)), material(0), processed(0){
 		normal[0] = glm::vec3(0);
 		normal[1] = glm::vec3(0);
 		normal[2] = glm::vec3(0);
@@ -55,6 +53,7 @@ private:
 	OctreeNode* children[8];
 	int size;
 	glm::ivec3 min;
+	static bool generateLeafMinimizer(OctreeNode* curNode, OctreeNode* rootNode);
 public:
 	NodeData* data;
 	OctreeNode(int _size, int minX, int minY, int minZ) :size(_size), min(minX, minY, minZ){
@@ -99,8 +98,12 @@ public:
 		}
 	}
 
-	NodeData* readLeafData(const OctreeNode* curNode, const ivec3& pos);
+	NodeData* readLeafData(OctreeNode* curNode, const ivec3& pos);
+	OctreeNode* readLeafNode(OctreeNode* curNode, const ivec3& pos);
 	void writeDataToNode(const ivec3& pos, const NodeData* val);
 	void performSDF(SamplerFunction* sampler);
-	static void generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode);
+	static void _generateMinimizers(OctreeNode* curNode, OctreeNode* rootNode, std::vector<glm::ivec3>& adjacentList);
+	static void generateMinimizers(OctreeNode* rootNode);
+	
+	
 };

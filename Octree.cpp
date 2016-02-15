@@ -28,6 +28,16 @@ void OctreeNode::performSDF(SamplerFunction* sampler){
 				//		val.normal[2].x, val.normal[2].y, val.normal[2].z
 				//		);
 				//}
+
+				/*
+				There are two methods here.
+				1, only write nodes that have at least one intersection on their minimal axis.
+					in this case, when we generate the minimizers for each cell, we also need to 
+					create and traverse	the negative-adjacent cells of all cells.
+					so ultimately, the nodes that have intersections on their non-minimal axis will 
+					still be generated regardless. this leads to method two.
+				2, write nodes whenever there's a material change in any of their corners.
+				*/
 				if (val.intersects.x >= 0 || val.intersects.y >= 0 || val.intersects.z >= 0)writeDataToNode(pos, &val);
 				//writeDataToNode(pos, &val);
 			}

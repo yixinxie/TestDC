@@ -11,7 +11,7 @@ public:
 	unsigned char processed;
 	glm::vec3 minimizer;
 
-	// terrain data
+	// terrain data, or hermite data
 	unsigned char material;
 
 	/*

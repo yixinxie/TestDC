@@ -30,6 +30,12 @@
     <ClCompile Include="SamplerFunction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VoxelChunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -42,6 +48,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="SamplerFunction.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelChunk.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelData.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

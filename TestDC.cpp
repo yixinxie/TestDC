@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "qef.h"
 #include "Octree.h"
+#include "VoxelChunk.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -23,13 +24,22 @@ void main(void){
 		//printf_s("%f, %f, %f\n", res.x, res.y, res.z);
 		printf_s("mass point :%f, %f, %f", massPoint.x, massPoint.y, massPoint.z);
 	}
-
-	OctreeNode root(16, 0, 0, 0);
-	SamplerFunction* sampler = new SF_Box();
-	((SF_Box*)sampler)->setSpecs(vec3(0.5f,0.5f,0.5f), vec3(1.5f,1.5f,1.5f));
-	root.performSDF(sampler);
 	
-	OctreeNode::generateMinimizers(&root);
+	
+	SamplerFunction* sampler = new SF_Box();
+	((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
+	
+	if(false){
+		OctreeNode root(16, 0, 0, 0);
+		root.performSDF(sampler);
+		OctreeNode::generateMinimizers(&root);
+	}
+
+	
+	VoxelChunk vc;
+	vc.createDataArray();
+	vc.performSDF(sampler);
+	vc.generateMesh();
 	
 	getchar();
 }

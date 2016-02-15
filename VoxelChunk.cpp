@@ -40,7 +40,7 @@ void VoxelChunk::generateMesh(){
 				if (eight[0]->material == 0 && eight[2]->material != 0)ymin = 1;
 				else if (eight[0]->material != 0 && eight[2]->material == 0)ymin = 0;
 				if (eight[0]->material == 0 && eight[4]->material != 0)zmin = 1;
-				else if (eight[0]->material != 0 && eight[4]->material == 0)xmin = 0;
+				else if (eight[0]->material != 0 && eight[4]->material == 0)zmin = 0;
 
 				// step 3
 				solverAddX(eight[1]->material, eight[0], solver, intersectionCount, 0, 0, 0);
@@ -60,20 +60,6 @@ void VoxelChunk::generateMesh(){
 				solverAddY(eight[7]->material, eight[5], solver, intersectionCount, 1, 0, 1);
 				solverAddX(eight[7]->material, eight[6], solver, intersectionCount, 0, 1, 1);
 
-				/*solverAddX(baseMat, eight[0], solver, intersectionCount, 0, 0, 0);
-				solverAddY(baseMat, eight[0], solver, intersectionCount, 0, 0, 0);
-				solverAddZ(baseMat, eight[0], solver, intersectionCount, 0, 0, 0);
-
-				solverAddY(baseMat, eight[1], solver, intersectionCount, 1, 0, 0);
-				solverAddZ(baseMat, eight[1], solver, intersectionCount, 1, 0, 0);
-				solverAddX(baseMat, eight[2], solver, intersectionCount, 0, 1, 0);
-				solverAddZ(baseMat, eight[2], solver, intersectionCount, 0, 1, 0);
-
-				solverAddX(baseMat, eight[4], solver, intersectionCount, 0, 0, 1);
-				solverAddY(baseMat, eight[4], solver, intersectionCount, 0, 0, 1);
-				solverAddZ(baseMat, eight[3], solver, intersectionCount, 1, 1, 0);
-				solverAddY(baseMat, eight[5], solver, intersectionCount, 1, 0, 1);
-				solverAddX(baseMat, eight[6], solver, intersectionCount, 0, 1, 1);*/
 
 				// step 4 : calculate the minimizer position
 				if (intersectionCount > 0)
@@ -112,11 +98,11 @@ void VoxelChunk::generateMesh(){
 				}
 				if (ymin != -1){
 					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8], y, z + indexOrder[ymin * 8 + 1]));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 2], y, z + indexOrder[ymin * 8 + 3]));
+					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
+					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
 					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 4], y, z + indexOrder[ymin * 8 + 5]));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 6], y, z + indexOrder[ymin * 8 + 7]));
+					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 5], y, z + indexOrder[ymin * 8 + 4]));
+					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 7], y, z + indexOrder[ymin * 8 + 6]));
 				}
 				if (zmin != -1){
 					tempIndices.push_back(readVertexIndex(x, y, z));

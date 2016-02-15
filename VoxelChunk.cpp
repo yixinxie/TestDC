@@ -7,8 +7,9 @@ void VoxelChunk::createDataArray(){
 }
 void VoxelChunk::generateMesh(){
 	//memset(indexMap, 0, sizeof(indexMap));
-	vector<vec3> tempVertices;
-	vector<int> tempIndices;
+	
+	tempVertices.clear();
+	tempIndices.clear();
 	const float QEF_ERROR = 1e-6f;
 	const int QEF_SWEEPS = 4;
 	QefSolver solver;

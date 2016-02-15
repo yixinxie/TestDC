@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "qef.h"
 #include <glm/glm.hpp>

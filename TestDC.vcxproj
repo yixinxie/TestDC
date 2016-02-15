@@ -79,6 +79,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Orihsay\misc\CharHelper.cpp" />
+    <ClCompile Include="MeshSerializer.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="qef.cpp" />
     <ClCompile Include="SamplerFunction.cpp" />
@@ -88,6 +90,8 @@
     <ClCompile Include="VoxelData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Orihsay\misc\CharHelper.h" />
+    <ClInclude Include="MeshSerializer.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="qef.h" />
     <ClInclude Include="SamplerFunction.h" />

@@ -1,4 +1,6 @@
+#pragma once
 #include "VoxelData.h"
+#include <vector>
 #include <glm/glm.hpp>
 #include "qef.h"
 #include "SamplerFunction.h"
@@ -13,8 +15,8 @@ private:
 	VoxelData* _data;
 	static unsigned int indexMap[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
 	// mesh data
-	vec3* vertices;
-	unsigned int* indices;
+	std::vector<vec3> tempVertices;
+	std::vector<unsigned int> tempIndices;
 	inline VoxelData* write(const ivec3& pos, const VoxelData& voxelData){
 		int idx = pos.x + pos.y * VOXELCHUNK_SIZE + pos.z * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE;
 
@@ -57,6 +59,7 @@ public:
 	void createDataArray(void);
 	void generateMesh(void);
 	void printIndices(void);
-	
+	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
+	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
 
 };

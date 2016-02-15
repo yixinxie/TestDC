@@ -2,6 +2,7 @@
 #include "qef.h"
 #include "Octree.h"
 #include "VoxelChunk.h"
+#include "MeshSerializer.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -34,12 +35,12 @@ void main(void){
 		root.performSDF(sampler);
 		OctreeNode::generateMinimizers(&root);
 	}
-
 	
 	VoxelChunk vc;
 	vc.createDataArray();
 	vc.performSDF(sampler);
 	vc.generateMesh();
 	
+	MeshSerializer::serialize("testdc.json", vc.getVertices(), vc.getIndices());
 	getchar();
 }

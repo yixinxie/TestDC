@@ -29,6 +29,7 @@ void main(void){
 	
 	SamplerFunction* sampler = new SF_Box();
 	((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
+	//((SF_Box*)sampler)->setSpecs(vec3(1, 1, 1), vec3(2, 2, 2));
 	
 	if(false){
 		OctreeNode root(16, 0, 0, 0);

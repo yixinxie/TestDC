@@ -2,12 +2,21 @@
 #include <vector>
 using namespace std;
 unsigned int VoxelChunk::indexMap[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
+const int indexOrder[] = {
+	-1, -1,
+	0, -1,
+	-1, 0,
+	-1, -1,
+
+	0, -1,
+	-1, -1,
+	-1, -1,
+	-1, 0,
+};
 void VoxelChunk::createDataArray(){
 	_data = new VoxelData[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
 }
 void VoxelChunk::generateMesh(){
-	//memset(indexMap, 0, sizeof(indexMap));
-	
 	tempVertices.clear();
 	tempIndices.clear();
 	const float QEF_ERROR = 1e-6f;
@@ -23,6 +32,9 @@ void VoxelChunk::generateMesh(){
 				solver.reset();
 				intersectionCount = 0;
 
+				if (x == 1 && y == 1 && z == 1){
+					int sdf = 0;
+				}
 				// step 1
 				eight[0] = read(ivec3(x, y, z));
 				eight[1] = read(ivec3(x + 1, y, z));
@@ -35,12 +47,12 @@ void VoxelChunk::generateMesh(){
 				unsigned char baseMat = eight[0]->material;
 				// step 2
 				int xmin = -1, ymin = -1, zmin = -1;
-				if (eight[0]->material == 0 && eight[1]->material != 0)xmin = 1;
-				else if (eight[0]->material != 0 && eight[1]->material == 0)xmin = 0;
-				if (eight[0]->material == 0 && eight[2]->material != 0)ymin = 1;
-				else if (eight[0]->material != 0 && eight[2]->material == 0)ymin = 0;
-				if (eight[0]->material == 0 && eight[4]->material != 0)zmin = 1;
-				else if (eight[0]->material != 0 && eight[4]->material == 0)zmin = 0;
+				if (baseMat == 0 && eight[1]->material != 0)xmin = 1;
+				else if (baseMat != 0 && eight[1]->material == 0)xmin = 0;
+				if (baseMat == 0 && eight[2]->material != 0)ymin = 1;
+				else if (baseMat != 0 && eight[2]->material == 0)ymin = 0;
+				if (baseMat == 0 && eight[4]->material != 0)zmin = 1;
+				else if (baseMat != 0 && eight[4]->material == 0)zmin = 0;
 
 				// step 3
 				solverAddX(eight[1]->material, eight[0], solver, intersectionCount, 0, 0, 0);
@@ -75,19 +87,9 @@ void VoxelChunk::generateMesh(){
 					indexMap[idx] = vertexId;
 					vertexId++;
 				}
-				// step 5 : build a quad for each edge that has mismatching material pair, 
+				// step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
 				// as indicated in step 2
-				const int indexOrder[] = {
-					-1, -1,
-					0, -1,
-					-1, 0,
-					-1, -1,
-
-					0, -1,
-					-1, -1,
-					-1, -1,
-					-1, 0,
-				};
+				
 				if (xmin != -1){
 					tempIndices.push_back(readVertexIndex(x, y, z));
 					tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
@@ -124,10 +126,6 @@ void VoxelChunk::generateMesh(){
 	}
 }
 
-void VoxelChunk::printIndices(){
-	
-
-}
 void VoxelChunk::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
 	const ivec3 maxBound = sampler->getMaxBound();
@@ -137,21 +135,22 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
-				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
-				if (voxel.material > 0){
+				if (xi == 0 && yi == 1 && zi == 1){
 					int sdf = 0;
 				}
+				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
 				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
 				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
 				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
-				//if (val.intersects.x >= 0 || val.intersects.y >= 0 || val.intersects.z >= 0){
-				//	printf_s("intersect: %f, %f, %f =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
-				//		val.intersects.x, val.intersects.y, val.intersects.z,
-				//		val.normal[0].x, val.normal[0].y, val.normal[0].z,
-				//		val.normal[1].x, val.normal[1].y, val.normal[1].z,
-				//		val.normal[2].x, val.normal[2].y, val.normal[2].z
-				//		);
-				//}
+				/*if (voxel.material != 0){
+					printf_s("intersect: %d, %d, %d - %d, %d, %d =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
+						xi,yi,zi,
+						voxel.intersections[0], voxel.intersections[1], voxel.intersections[2],
+						voxel.normal[0].x, voxel.normal[0].y, voxel.normal[0].z,
+						voxel.normal[1].x, voxel.normal[1].y, voxel.normal[1].z,
+						voxel.normal[2].x, voxel.normal[2].y, voxel.normal[2].z
+						);
+				}*/
 				VoxelData* readVoxel = read(pos);// probably inappropriate but shortcut for now.
 				readVoxel->material = voxel.material;
 				readVoxel->normal[0] = voxel.normal[0];
@@ -160,8 +159,6 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 				readVoxel->intersections[0] = voxel.intersections[0];
 				readVoxel->intersections[1] = voxel.intersections[1];
 				readVoxel->intersections[2] = voxel.intersections[2];
-
-
 			}
 		}
 	}

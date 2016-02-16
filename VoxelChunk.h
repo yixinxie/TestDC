@@ -6,7 +6,7 @@
 #include "SamplerFunction.h"
 #define VOXELCHUNK_SIZE 9
 #define VOXELCHUNK_USABLE_SIZE 8
-#define EDGE_SCALE 256
+#define EDGE_SCALE 255
 #define VOXEL_SCALE 1.0f
 using namespace glm;
 using namespace svd;
@@ -55,11 +55,11 @@ private:
 	}
 public:
 	VoxelChunk(void){};
+	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
 	void createDataArray(void);
 	void generateMesh(void);
-	void printIndices(void);
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
 	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
-
+	
 };

@@ -1,4 +1,5 @@
 #include "SamplerFunction.h"
+#include "VoxelChunk.h"
 #include <math.h>
 SF_Box::SF_Box(){
 }
@@ -8,13 +9,15 @@ void SF_Box::setSpecs(const vec3& min, const vec3& max){
 	rectMax = max;
 
 	// recalculate the bounding box. there could be some numerical problems when the values are big.
-	minBound.x = (int)floor(rectMin.x);
-	minBound.y = (int)floor(rectMin.y);
-	minBound.z = (int)floor(rectMin.z);
+	minBound.x = (int)floor(rectMin.x) - 1;
+	minBound.y = (int)floor(rectMin.y) - 1;
+	minBound.z = (int)floor(rectMin.z) - 1;
+	minBound = clamp(minBound, ivec3(0, 0, 0), ivec3(VOXELCHUNK_USABLE_SIZE, VOXELCHUNK_USABLE_SIZE, VOXELCHUNK_USABLE_SIZE));
 
 	maxBound.x = (int)floor(rectMax.x) + 1;
 	maxBound.y = (int)floor(rectMax.y) + 1;
 	maxBound.z = (int)floor(rectMax.z) + 1;
+	maxBound = clamp(maxBound, ivec3(0, 0, 0), ivec3(VOXELCHUNK_USABLE_SIZE, VOXELCHUNK_USABLE_SIZE, VOXELCHUNK_USABLE_SIZE));
 }
 int SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
 	int material = 0;

@@ -98,7 +98,7 @@ void VoxelChunk::generateMesh(){
 				*/
 				
 				if (xmin != -1){
-					if (y != 0 && z != 0)
+					if ((y != 0 && z != 0) && x != 0)
 					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
@@ -109,7 +109,7 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (ymin != -1){
-					if (x != 0 && z != 0)
+					if ((x != 0 && z != 0) && y != 0)
 					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
@@ -120,7 +120,8 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (zmin != -1){
-					if (x != 0 && y != 0)
+					
+					if ((x != 0 && y != 0) && z != 0)
 					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));

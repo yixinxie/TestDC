@@ -150,9 +150,15 @@ void VoxelManager::generateMeshes(){
 		for (int y = 0; y < yCount; y++){
 			for (int x = 0; x < xCount; x++){
 				int chunkIndex = calcChunkIndex(x, y, z);
+				if (x == 0 && y == 1 && z == 0){
+					int sdf = 0;
+				}
 				if (chunks[chunkIndex] != nullptr){
 					chunks[chunkIndex]->generateMesh();
-					//MeshSerializer::serialize("testdc_.json", chunks[chunkIndex]->getVertices(), chunks[chunkIndex]->getIndices());
+					char tmp[256];
+					
+					sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d.json", x, y, z);
+					MeshSerializer::serialize(tmp, chunks[chunkIndex]->getVertices(), chunks[chunkIndex]->getIndices());
 				}
 			}
 		}

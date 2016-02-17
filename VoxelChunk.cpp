@@ -90,10 +90,16 @@ void VoxelChunk::generateMesh(){
 				}
 				/* step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
 				   as indicated in step 2
+				   xmin, ymin, zmin somewhat indicate the normal at the intersection, as in,
+				   is the axis shooting into the surface, or shooting out of the surface?
+				   we also need to make sure when one axis has an intersection, the other two axis are not
+				   on the minimal edges of the chunk.
+
 				*/
 				
 				if (xmin != -1){
-					if (y != 0 && z != 0){
+					if (y != 0 && z != 0)
+					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
@@ -103,7 +109,8 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (ymin != -1){
-					if (x != 0 && y != 0){
+					if (x != 0 && z != 0)
+					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
@@ -113,7 +120,8 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (zmin != -1){
-					if (x != 0 && y != 0){
+					if (x != 0 && y != 0)
+					{
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 2], y + indexOrder[zmin * 8 + 3], z));

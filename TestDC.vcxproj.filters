@@ -45,6 +45,9 @@
     <ClCompile Include="..\Orihsay\misc\CharHelper.cpp">
       <Filter>Source Files\external</Filter>
     </ClCompile>
+    <ClCompile Include="VoxelManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -70,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="..\Orihsay\misc\CharHelper.h">
       <Filter>Source Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelManager.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

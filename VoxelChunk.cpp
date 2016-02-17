@@ -1,7 +1,7 @@
 #include "VoxelChunk.h"
 #include <vector>
 using namespace std;
-unsigned int VoxelChunk::indexMap[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
+unsigned int VoxelChunk::indexMap[DataRange * DataRange * DataRange];
 const int indexOrder[] = {
 	-1, -1,
 	0, -1,
@@ -14,7 +14,7 @@ const int indexOrder[] = {
 	-1, 0,
 };
 void VoxelChunk::createDataArray(){
-	_data = new VoxelData[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
+	_data = new VoxelData[DataRange * DataRange * DataRange];
 }
 void VoxelChunk::generateMesh(){
 	tempVertices.clear();
@@ -25,10 +25,11 @@ void VoxelChunk::generateMesh(){
 	VoxelData* eight[8];
 	int intersectionCount;
 	int vertexId = 0;
-	for (int z = 0; z < VOXELCHUNK_USABLE_SIZE; z++){
-		for (int y = 0; y < VOXELCHUNK_USABLE_SIZE; y++){
-			for (int x = 0; x < VOXELCHUNK_USABLE_SIZE; x++){
-				int idx = x + y * VOXELCHUNK_SIZE + z * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE;
+	printf_s("\nvertices:\n");
+	for (int z = 0; z < TraverseRange; z++){
+		for (int y = 0; y < TraverseRange; y++){
+			for (int x = 0; x < TraverseRange; x++){
+				int idx = calcIndex(x, y, z);
 				solver.reset();
 				intersectionCount = 0;
 
@@ -36,14 +37,14 @@ void VoxelChunk::generateMesh(){
 					int sdf = 0;
 				}
 				// step 1
-				eight[0] = read(ivec3(x, y, z));
-				eight[1] = read(ivec3(x + 1, y, z));
-				eight[2] = read(ivec3(x, y + 1, z));
-				eight[3] = read(ivec3(x + 1, y + 1, z));
-				eight[4] = read(ivec3(x, y, z + 1));
-				eight[5] = read(ivec3(x + 1, y, z + 1));
-				eight[6] = read(ivec3(x, y + 1, z + 1));
-				eight[7] = read(ivec3(x + 1, y + 1, z + 1));
+				eight[0] = read(x, y, z);
+				eight[1] = read(x + 1, y, z);
+				eight[2] = read(x, y + 1, z);
+				eight[3] = read(x + 1, y + 1, z);
+				eight[4] = read(x, y, z + 1);
+				eight[5] = read(x + 1, y, z + 1);
+				eight[6] = read(x, y + 1, z + 1);
+				eight[7] = read(x + 1, y + 1, z + 1);
 				unsigned char baseMat = eight[0]->material;
 				// step 2
 				int xmin = -1, ymin = -1, zmin = -1;
@@ -87,40 +88,45 @@ void VoxelChunk::generateMesh(){
 					indexMap[idx] = vertexId;
 					vertexId++;
 				}
-				// step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
-				// as indicated in step 2
+				/* step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
+				   as indicated in step 2
+				*/
 				
 				if (xmin != -1){
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
-					tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 4], z + indexOrder[xmin * 8 + 5]));
-					tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 6], z + indexOrder[xmin * 8 + 7]));
+					if (y != 0 && z != 0){
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 4], z + indexOrder[xmin * 8 + 5]));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 6], z + indexOrder[xmin * 8 + 7]));
+					}
 				}
 				if (ymin != -1){
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 5], y, z + indexOrder[ymin * 8 + 4]));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 7], y, z + indexOrder[ymin * 8 + 6]));
+					if (x != 0 && y != 0){
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 5], y, z + indexOrder[ymin * 8 + 4]));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 7], y, z + indexOrder[ymin * 8 + 6]));
+					}
 				}
 				if (zmin != -1){
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 2], y + indexOrder[zmin * 8 + 3], z));
-					tempIndices.push_back(readVertexIndex(x, y, z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 4], y + indexOrder[zmin * 8 + 5], z));
-					tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 6], y + indexOrder[zmin * 8 + 7], z));
+					if (x != 0 && y != 0){
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 2], y + indexOrder[zmin * 8 + 3], z));
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 4], y + indexOrder[zmin * 8 + 5], z));
+						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 6], y + indexOrder[zmin * 8 + 7], z));
+					}
 				}
 			}
 		}
 	}
-	printf_s("\n");
-	/*for (auto it = tempIndices.begin(); it != tempIndices.end; it++){
-		printf_s("%d, ", *it);
-	}*/
+	printf_s("indices:");
+
 	for (int i = 0; i < tempIndices.size(); i++){
 		printf_s("%d, ", tempIndices[i]);
 	}
@@ -135,9 +141,7 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
-				if (xi == 0 && yi == 1 && zi == 1){
-					int sdf = 0;
-				}
+
 				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
 				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
 				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
@@ -151,7 +155,7 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 						voxel.normal[2].x, voxel.normal[2].y, voxel.normal[2].z
 						);
 				}*/
-				VoxelData* readVoxel = read(pos);// probably inappropriate but shortcut for now.
+				VoxelData* readVoxel = read(xi ,yi, zi);// probably inappropriate but shortcut for now.
 				readVoxel->material = voxel.material;
 				readVoxel->normal[0] = voxel.normal[0];
 				readVoxel->normal[1] = voxel.normal[1];
@@ -162,4 +166,20 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 			}
 		}
 	}
+}
+void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
+	int idx = calcIndex(x, y, z);
+	if (_data == nullptr)createDataArray();
+	//_data[idx] = vData;
+
+	_data[idx].intersections[0] = vData.intersections[0];
+	_data[idx].intersections[1] = vData.intersections[1];
+	_data[idx].intersections[2] = vData.intersections[2];
+
+	_data[idx].material = vData.material;
+
+	_data[idx].normal[0] = vData.normal[0];
+	_data[idx].normal[1] = vData.normal[1];
+	_data[idx].normal[2] = vData.normal[2];
+
 }

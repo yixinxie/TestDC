@@ -4,30 +4,34 @@
 #include <glm/glm.hpp>
 #include "qef.h"
 #include "SamplerFunction.h"
-#define VOXELCHUNK_SIZE 9
-#define VOXELCHUNK_USABLE_SIZE 8
 #define EDGE_SCALE 255
-#define VOXEL_SCALE 1.0f
+
 using namespace glm;
 using namespace svd;
 class VoxelChunk{
+public:
+	static const int UsableRangeShift = 1; // # of bit shift
+	static const int UsableRange = 1 << UsableRangeShift;
+	static const int TraverseRange = UsableRange + 1;
+	static const int DataRange = UsableRange + 2;
+	
+	
 private:
 	VoxelData* _data;
-	static unsigned int indexMap[VOXELCHUNK_SIZE * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
-	// mesh data
+	static unsigned int indexMap[DataRange * DataRange * DataRange];
+	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
-	inline VoxelData* write(const ivec3& pos, const VoxelData& voxelData){
-		int idx = pos.x + pos.y * VOXELCHUNK_SIZE + pos.z * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE;
-
-		return &_data[idx];
+	inline int calcIndex(int x, int y, int z){
+		return x + y * DataRange + z * DataRange * DataRange;
 	}
-	inline VoxelData* read(const ivec3& pos){
-		int idx = pos.x + pos.y * VOXELCHUNK_SIZE + pos.z * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE;
+
+	inline VoxelData* read(const int x, const int y, const int z){
+		int idx = calcIndex(x, y, z);
 		return &_data[idx];
 	}
 	inline int readVertexIndex(const int x, const int y, const int z){
-		return indexMap[x + y * VOXELCHUNK_SIZE + z * VOXELCHUNK_SIZE * VOXELCHUNK_SIZE];
+		return indexMap[calcIndex(x, y, z)];
 	}
 	inline void solverAddX(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
@@ -54,12 +58,13 @@ private:
 		}
 	}
 public:
-	VoxelChunk(void){};
+	VoxelChunk(void) :_data(nullptr){};
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
 	void createDataArray(void);
 	void generateMesh(void);
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
 	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
+	void writeRaw(int x, int y, int z, const VoxelData& vData);
 	
 };

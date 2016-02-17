@@ -2,6 +2,7 @@
 #include "qef.h"
 #include "Octree.h"
 #include "VoxelChunk.h"
+#include "VoxelManager.h"
 #include "MeshSerializer.h"
 using namespace svd;
 void main(void){
@@ -28,8 +29,8 @@ void main(void){
 	
 	
 	SamplerFunction* sampler = new SF_Box();
-	((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
-	//((SF_Box*)sampler)->setSpecs(vec3(1, 1, 1), vec3(2, 2, 2));
+	//((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
+	((SF_Box*)sampler)->setSpecs(vec3(1, 1, 1), vec3(2, 2, 2));
 	
 	if(false){
 		OctreeNode root(16, 0, 0, 0);
@@ -37,11 +38,17 @@ void main(void){
 		OctreeNode::generateMinimizers(&root);
 	}
 	
-	VoxelChunk vc;
-	vc.createDataArray();
-	vc.performSDF(sampler);
-	vc.generateMesh();
-	
-	MeshSerializer::serialize("testdc.json", vc.getVertices(), vc.getIndices());
+	//VoxelChunk vc;
+	//vc.createDataArray();
+	//vc.performSDF(sampler);
+	//vc.generateMesh();
+	//
+	//MeshSerializer::serialize("testdc.json", vc.getVertices(), vc.getIndices());
+
+	VoxelManager vm;
+	vm.initWorldSize(4, 4, 4);
+
+	vm.performSDF(sampler);
+	vm.generateMeshes();
 	getchar();
 }

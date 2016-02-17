@@ -88,6 +88,7 @@
     <ClCompile Include="TestDC.cpp" />
     <ClCompile Include="VoxelChunk.cpp" />
     <ClCompile Include="VoxelData.cpp" />
+    <ClCompile Include="VoxelManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Orihsay\misc\CharHelper.h" />
@@ -98,6 +99,7 @@
     <ClInclude Include="svd.h" />
     <ClInclude Include="VoxelChunk.h" />
     <ClInclude Include="VoxelData.h" />
+    <ClInclude Include="VoxelManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

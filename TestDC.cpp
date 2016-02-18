@@ -4,6 +4,7 @@
 #include "VoxelChunk.h"
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
+#include "HeightMapSampler.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -37,6 +38,8 @@ void main(void){
 		root.performSDF(sampler);
 		OctreeNode::generateMinimizers(&root);
 	}
+	SamplerFunction* heightmapSampler = new SF_Heightmap();
+	((SF_Heightmap*)heightmapSampler)->loadPNG(ivec3(1024, 256, 1024), "assets/dc.png");
 	
 	//VoxelChunk vc;
 	//vc.createDataArray();

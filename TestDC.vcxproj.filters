@@ -16,6 +16,9 @@
     <Filter Include="Source Files\external">
       <UniqueIdentifier>{78a90908-7086-4976-8c32-7827430345a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\external\lodepng">
+      <UniqueIdentifier>{fc125092-d849-491f-9714-a809bcb801ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TestDC.cpp">
@@ -48,6 +51,15 @@
     <ClCompile Include="VoxelManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HeightMapSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lodepng\lodepng.cpp">
+      <Filter>Source Files\external\lodepng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lodepng\lodepng_util.cpp">
+      <Filter>Source Files\external\lodepng</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -76,6 +88,15 @@
     </ClInclude>
     <ClInclude Include="VoxelManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeightMapSampler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lodepng\lodepng.h">
+      <Filter>Source Files\external\lodepng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lodepng\lodepng_util.h">
+      <Filter>Source Files\external\lodepng</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

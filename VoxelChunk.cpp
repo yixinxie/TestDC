@@ -25,7 +25,6 @@ void VoxelChunk::generateMesh(){
 	VoxelData* eight[8];
 	int intersectionCount;
 	int vertexId = 0;
-	printf_s("\nvertices:\n");
 	for (int z = 0; z < TraverseRange; z++){
 		for (int y = 0; y < TraverseRange; y++){
 			for (int x = 0; x < TraverseRange; x++){
@@ -79,10 +78,6 @@ void VoxelChunk::generateMesh(){
 				{
 					Vec3 res;
 					solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
-					res.x += x;
-					res.y += y;
-					res.z += z;
-					printf_s("%f, %f, %f\n", res.x, res.y, res.z);
 					tempVertices.push_back(vec3(res.x, res.y, res.z));
 					// store the vertex Id to the index map.
 					indexMap[idx] = vertexId;
@@ -98,8 +93,7 @@ void VoxelChunk::generateMesh(){
 				*/
 				
 				if (xmin != -1){
-					if ((y != 0 && z != 0) && x != 0)
-					{
+					if (y != 0 && z != 0 && x != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
@@ -109,8 +103,7 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (ymin != -1){
-					if ((x != 0 && z != 0) && y != 0)
-					{
+					if (x != 0 && z != 0 && y != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
@@ -120,9 +113,7 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (zmin != -1){
-					
-					if ((x != 0 && y != 0) && z != 0)
-					{
+					if (x != 0 && y != 0 && z != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 2], y + indexOrder[zmin * 8 + 3], z));
@@ -134,11 +125,18 @@ void VoxelChunk::generateMesh(){
 			}
 		}
 	}
-	printf_s("indices:");
+
+	printf_s("vertices:");
+
+	for (int i = 0; i < tempVertices.size(); i++){
+		printf_s("\n%f, %f, %f", tempVertices[i].x, tempVertices[i].y, tempVertices[i].z);
+	}
+	printf_s("\nindices:");
 
 	for (int i = 0; i < tempIndices.size(); i++){
 		printf_s("%d, ", tempIndices[i]);
 	}
+	printf_s("\n");
 }
 
 void VoxelChunk::performSDF(SamplerFunction* sampler){

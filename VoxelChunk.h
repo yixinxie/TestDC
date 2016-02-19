@@ -10,7 +10,7 @@ using namespace glm;
 using namespace svd;
 class VoxelChunk{
 public:
-	static const int UsableRangeShift = 1; // # of bit shift
+	static const int UsableRangeShift = 4; // # of bit shift
 	static const int UsableRange = 1 << UsableRangeShift;
 	static const int TraverseRange = UsableRange + 1;
 	static const int DataRange = UsableRange + 2;

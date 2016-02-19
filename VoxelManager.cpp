@@ -31,6 +31,9 @@ void VoxelManager::initWorldSize(int _sizeX, int _sizeY, int _sizeZ){
 	xCount = worldBoundX / VoxelChunk::UsableRange;
 	yCount = worldBoundY / VoxelChunk::UsableRange;
 	zCount = worldBoundZ / VoxelChunk::UsableRange;
+	if (xCount == 0)xCount = 1;
+	if (yCount == 0)yCount = 1;
+	if (zCount == 0)zCount = 1;
 	chunks = new VoxelChunk*[xCount * yCount * zCount];
 	zeroChunkPointers();
 }
@@ -122,23 +125,23 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
-
+				if (xi == 2 && yi == 1 && zi == 1){
+					int sdf = 0;
+				}
 				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
 				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
 				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
 				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
 				/*if (voxel.material != 0){
-				printf_s("intersect: %d, %d, %d - %d, %d, %d =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
-				xi,yi,zi,
-				voxel.intersections[0], voxel.intersections[1], voxel.intersections[2],
-				voxel.normal[0].x, voxel.normal[0].y, voxel.normal[0].z,
-				voxel.normal[1].x, voxel.normal[1].y, voxel.normal[1].z,
-				voxel.normal[2].x, voxel.normal[2].y, voxel.normal[2].z
-				);
+					printf_s("intersect: %d, %d, %d - %d, %d, %d =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
+					xi,yi,zi,
+					voxel.intersections[0], voxel.intersections[1], voxel.intersections[2],
+					voxel.normal[0].x, voxel.normal[0].y, voxel.normal[0].z,
+					voxel.normal[1].x, voxel.normal[1].y, voxel.normal[1].z,
+					voxel.normal[2].x, voxel.normal[2].y, voxel.normal[2].z
+					);
 				}*/
-				if (xi == 2 && yi == 2 && zi == 2){
-					int sdf = 0;
-				}
+				
 				write(voxel, xi, yi, zi);// probably inappropriate but shortcut for now.
 				
 			}

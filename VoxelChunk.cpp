@@ -78,6 +78,12 @@ void VoxelChunk::generateMesh(){
 				{
 					Vec3 res;
 					solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+					res.x += x;
+					res.y += y;
+					res.z += z;
+					if (res.z < 0){
+						int sdf = 0;
+					}
 					tempVertices.push_back(vec3(res.x, res.y, res.z));
 					// store the vertex Id to the index map.
 					indexMap[idx] = vertexId;
@@ -126,17 +132,17 @@ void VoxelChunk::generateMesh(){
 		}
 	}
 
-	printf_s("vertices:");
+	//printf_s("vertices:");
 
-	for (int i = 0; i < tempVertices.size(); i++){
-		printf_s("\n%f, %f, %f", tempVertices[i].x, tempVertices[i].y, tempVertices[i].z);
-	}
-	printf_s("\nindices:");
+	//for (int i = 0; i < tempVertices.size(); i++){
+	//	printf_s("\n%f, %f, %f", tempVertices[i].x, tempVertices[i].y, tempVertices[i].z);
+	//}
+	//printf_s("\nindices:");
 
-	for (int i = 0; i < tempIndices.size(); i++){
-		printf_s("%d, ", tempIndices[i]);
-	}
-	printf_s("\n");
+	//for (int i = 0; i < tempIndices.size(); i++){
+	//	printf_s("%d, ", tempIndices[i]);
+	//}
+	//printf_s("\n");
 }
 
 void VoxelChunk::performSDF(SamplerFunction* sampler){

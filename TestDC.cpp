@@ -26,32 +26,27 @@ void main(void){
 		const Vec3& massPoint = solver.getMassPoint();
 		//printf_s("%f, %f, %f\n", res.x, res.y, res.z);
 		printf_s("mass point :%f, %f, %f", massPoint.x, massPoint.y, massPoint.z);
+	/*	OctreeNode root(16, 0, 0, 0);
+		root.performSDF(sampler);
+		OctreeNode::generateMinimizers(&root);*/
 	}
 	
 	
 	SamplerFunction* sampler = new SF_Box();
 	//((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
-	((SF_Box*)sampler)->setSpecs(vec3(1.5, 1.5, 1.5), vec3(2.5, 2.5, 2.5));
+	((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 	
-	if(false){
-		OctreeNode root(16, 0, 0, 0);
-		root.performSDF(sampler);
-		OctreeNode::generateMinimizers(&root);
-	}
+	
 	SamplerFunction* heightmapSampler = new SF_Heightmap();
-	((SF_Heightmap*)heightmapSampler)->loadPNG(ivec3(1024, 256, 1024), "assets/dc.png");
-	
-	//VoxelChunk vc;
-	//vc.createDataArray();
-	//vc.performSDF(sampler);
-	//vc.generateMesh();
-	//
-	//MeshSerializer::serialize("testdc.json", vc.getVertices(), vc.getIndices());
+	((SF_Heightmap*)heightmapSampler)->loadPNG(ivec2(1024, 1024), "assets/dc.png");
+	((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0,0,0), ivec3(63,15,63));
 
 	VoxelManager vm;
-	vm.initWorldSize(4, 4, 4);
+	vm.initWorldSize(64, 16, 64);
 
-	vm.performSDF(sampler);
+	vm.performSDF(heightmapSampler);
 	vm.generateMeshes();
 	getchar();
+	delete sampler;
+	delete heightmapSampler;
 }

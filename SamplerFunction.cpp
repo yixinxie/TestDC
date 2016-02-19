@@ -19,8 +19,8 @@ void SF_Box::setSpecs(const vec3& min, const vec3& max){
 	maxBound.z = (int)floor(rectMax.z) + 1;
 	maxBound = clamp(maxBound, ivec3(0, 0, 0), ivec3(VoxelChunk::UsableRange, VoxelChunk::UsableRange, VoxelChunk::UsableRange));
 }
-int SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
-	int material = 0;
+unsigned char SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
+	unsigned char material = 0;
 	if (pos.x >= rectMin.x &&
 		pos.x <= rectMax.x &&
 		pos.y >= rectMin.y &&

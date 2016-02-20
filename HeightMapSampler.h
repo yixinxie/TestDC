@@ -20,10 +20,10 @@ private:
 		unsigned char height0 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel];
 		unsigned char height1 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel + 1];
 		unsigned char height2 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel + 2];
-		return (float)(height0 + height1 + height2) / 3.0f / 1.0f;
+		return (float)(height0 + height1 + height2) / 3.0f / 2.0f;
 	}
 public:
-	SF_Heightmap(void) : sampleScale(1){}
+	SF_Heightmap(void) : sampleScale(1024/64){}
 	~SF_Heightmap(){}
 	void setSpecs(const ivec3& from, const ivec3& to);
 	void loadPNG(const ivec2& _dim, const char* fileName);

@@ -90,6 +90,7 @@
     <ClCompile Include="SamplerFunction.cpp" />
     <ClCompile Include="svd.cpp" />
     <ClCompile Include="TestDC.cpp" />
+    <ClCompile Include="Visualize.cpp" />
     <ClCompile Include="VoxelChunk.cpp" />
     <ClCompile Include="VoxelData.cpp" />
     <ClCompile Include="VoxelManager.cpp" />
@@ -104,6 +105,7 @@
     <ClInclude Include="qef.h" />
     <ClInclude Include="SamplerFunction.h" />
     <ClInclude Include="svd.h" />
+    <ClInclude Include="Visualize.h" />
     <ClInclude Include="VoxelChunk.h" />
     <ClInclude Include="VoxelData.h" />
     <ClInclude Include="VoxelManager.h" />

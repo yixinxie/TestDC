@@ -60,6 +60,9 @@
     <ClCompile Include="..\lodepng\lodepng_util.cpp">
       <Filter>Source Files\external\lodepng</Filter>
     </ClCompile>
+    <ClCompile Include="Visualize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -97,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="..\lodepng\lodepng_util.h">
       <Filter>Source Files\external\lodepng</Filter>
+    </ClInclude>
+    <ClInclude Include="Visualize.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

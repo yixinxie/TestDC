@@ -1,5 +1,6 @@
 #include "VoxelChunk.h"
 #include <vector>
+#include "Visualize.h"
 using namespace std;
 unsigned int VoxelChunk::indexMap[DataRange * DataRange * DataRange];
 const int indexOrder[] = {
@@ -32,9 +33,7 @@ void VoxelChunk::generateMesh(){
 				solver.reset();
 				intersectionCount = 0;
 
-				if (x == 1 && y == 1 && z == 1){
-					int sdf = 0;
-				}
+				
 				// step 1
 				eight[0] = read(x, y, z);
 				eight[1] = read(x + 1, y, z);
@@ -44,6 +43,17 @@ void VoxelChunk::generateMesh(){
 				eight[5] = read(x + 1, y, z + 1);
 				eight[6] = read(x, y + 1, z + 1);
 				eight[7] = read(x + 1, y + 1, z + 1);
+
+				if (x == 2 && y == 0 && z == 0){
+					VIS_DOT(x, y, z);
+					VIS_VEC3(x, y + (float)eight[0]->intersections[1] / EDGE_SCALE, z, eight[0]->normal[1].x, eight[0]->normal[1].y, eight[0]->normal[1].z);
+					VIS_VEC3(x + 1, y + (float)eight[1]->intersections[1] / EDGE_SCALE, z, eight[1]->normal[1].x, eight[1]->normal[1].y, eight[0]->normal[1].z);
+					VIS_VEC3(x, y + (float)eight[4]->intersections[1] / EDGE_SCALE, z + 1, eight[4]->normal[1].x, eight[4]->normal[1].y, eight[0]->normal[1].z);
+					VIS_VEC3(x + 1, y + (float)eight[5]->intersections[1] / EDGE_SCALE, z + 1, eight[5]->normal[1].x, eight[5]->normal[1].y, eight[0]->normal[1].z);
+					VIS_FLUSH;
+				}
+
+
 				unsigned char baseMat = eight[0]->material;
 				// step 2
 				int xmin = -1, ymin = -1, zmin = -1;
@@ -78,12 +88,18 @@ void VoxelChunk::generateMesh(){
 				{
 					Vec3 res;
 					solver.solve(res, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+					if (res.x < 0 || res.x > 1.0f ||
+						res.y < 0 || res.y > 1.0f ||
+						res.z < 0 || res.z > 1.0f){
+						int sdf = 0;
+					}
+
 					res.x += x;
 					res.y += y;
 					res.z += z;
-					if (res.z < 0){
-						int sdf = 0;
-					}
+
+					
+
 					tempVertices.push_back(vec3(res.x, res.y, res.z));
 					// store the vertex Id to the index map.
 					indexMap[idx] = vertexId;

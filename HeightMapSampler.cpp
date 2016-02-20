@@ -91,7 +91,7 @@ vec3 SF_Heightmap::getNormal(vec2 pos, float height){
 	vec3 ypos(pos.x, heightPosY, pos.y + sampleScale);
 	vec3 seg0 = glm::normalize(xpos - origin);
 	vec3 seg1 = glm::normalize(ypos - origin);
-	vec3 ret(glm::normalize(glm::cross(seg0, seg1)));
+	vec3 ret(glm::normalize(glm::cross(seg1, seg0)));
 
 	return ret;
 }

@@ -39,7 +39,7 @@ void main(void){
 	
 	SamplerFunction* heightmapSampler = new SF_Heightmap();
 	((SF_Heightmap*)heightmapSampler)->loadPNG(ivec2(1024, 1024), "assets/dc.png");
-	((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0,0,0), ivec3(63,15,63));
+	((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0,0,0), ivec3(62,15,62));
 
 	VoxelManager vm;
 	vm.initWorldSize(64, 16, 64);

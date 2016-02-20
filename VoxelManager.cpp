@@ -125,10 +125,14 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
-				if (xi == 2 && yi == 1 && zi == 1){
+				if (xi == 1 && yi ==0 && zi == 1){
 					int sdf = 0;
 				}
 				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
+				if (voxel.normal[1].y < 0){
+					int sdf = 0;
+				}
+
 				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
 				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
 				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);

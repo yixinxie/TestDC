@@ -15,15 +15,17 @@ private:
 
 	
 	float getHeight(vec2 pos);
+	float getHeightSimple(const ivec2& pos);
 	vec3 getNormal(vec2 pos, float height);
+	vec3 getNormal2(vec2 pos, float height);
 	inline float getRGBSum(ivec2 pos){
 		unsigned char height0 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel];
 		unsigned char height1 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel + 1];
 		unsigned char height2 = imageBuffer[(pos.x + pos.y * dimension.y) * BytesPerPixel + 2];
-		return (float)(height0 + height1 + height2) / 3.0f / 2.0f;
+		return (float)(height0 + height1 + height2) / 3.0f;
 	}
 public:
-	SF_Heightmap(void) : sampleScale(1024/64){}
+	SF_Heightmap(void) : sampleScale(1){}
 	~SF_Heightmap(){}
 	void setSpecs(const ivec3& from, const ivec3& to);
 	void loadPNG(const ivec2& _dim, const char* fileName);

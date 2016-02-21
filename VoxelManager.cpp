@@ -1,5 +1,6 @@
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
+#include "Visualize.h"
 void VoxelManager::zeroChunkPointers(){
 	for (int z = 0; z < zCount; z++){
 		for (int y = 0; y < yCount; y++){
@@ -125,7 +126,7 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
-				if (xi == 1 && yi ==0 && zi == 1){
+				if (xi == 1 && yi == 0 && zi == 63){
 					int sdf = 0;
 				}
 				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
@@ -157,7 +158,7 @@ void VoxelManager::generateMeshes(){
 		for (int y = 0; y < yCount; y++){
 			for (int x = 0; x < xCount; x++){
 				int chunkIndex = calcChunkIndex(x, y, z);
-				if (x == 0 && y == 1 && z == 0){
+				if (x == 0 && y == 0 && z == 1){
 					int sdf = 0;
 				}
 				if (chunks[chunkIndex] != nullptr){
@@ -165,7 +166,7 @@ void VoxelManager::generateMeshes(){
 					char tmp[256];
 					
 					sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d.json", x, y, z);
-					MeshSerializer::serialize(tmp, chunks[chunkIndex]->getVertices(), chunks[chunkIndex]->getIndices());
+					MeshSerializer::serialize(tmp, chunks[chunkIndex]->getVertices(), chunks[chunkIndex]->getIndices(), chunks[chunkIndex]->getNormals());
 				}
 			}
 		}

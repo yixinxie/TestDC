@@ -22,6 +22,7 @@ private:
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
+	std::vector<vec3> tempNormals;
 	inline int calcIndex(int x, int y, int z){
 		return x + y * DataRange + z * DataRange * DataRange;
 	}
@@ -33,28 +34,31 @@ private:
 	inline int readVertexIndex(const int x, const int y, const int z){
 		return indexMap[calcIndex(x, y, z)];
 	}
-	inline void solverAddX(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+	inline void solverAddX(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, vec3& accumNormal, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
 			solver.add(
 				Vec3(_x + ((float)_vdat->intersections[0]) / EDGE_SCALE, _y, _z),
 				Vec3(_vdat->normal[0].x, _vdat->normal[0].y, _vdat->normal[0].z));
 			intersectionCount++;
+			accumNormal += _vdat->normal[0];
 		}
 	}
-	inline void solverAddY(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+	inline void solverAddY(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, vec3& accumNormal, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
 			solver.add(
 				Vec3(_x, _y + ((float)_vdat->intersections[1]) / EDGE_SCALE, _z),
 				Vec3(_vdat->normal[1].x, _vdat->normal[1].y, _vdat->normal[1].z));
 			intersectionCount++;
+			accumNormal += _vdat->normal[1];
 		}
 	}
-	inline void solverAddZ(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, float _x, float _y, float _z){
+	inline void solverAddZ(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, vec3& accumNormal, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
 			solver.add(
 				Vec3(_x, _y, _z + ((float)_vdat->intersections[2]) / EDGE_SCALE),
 				Vec3(_vdat->normal[2].x, _vdat->normal[2].y, _vdat->normal[2].z));
 			intersectionCount++;
+			accumNormal += _vdat->normal[2];
 		}
 	}
 public:
@@ -65,6 +69,7 @@ public:
 	void generateMesh(void);
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
 	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
+	inline const std::vector<vec3>& getNormals(void){ return tempNormals; };
 	void writeRaw(int x, int y, int z, const VoxelData& vData);
 	
 };

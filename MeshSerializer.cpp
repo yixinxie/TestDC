@@ -1,7 +1,7 @@
 #include "MeshSerializer.h"
 
 using namespace std;
-void MeshSerializer::serialize(const char* fileName, const vector<glm::vec3>& vertices, const vector<unsigned int>& indices){
+void MeshSerializer::serialize(const char* fileName, const vector<glm::vec3>& vertices, const vector<unsigned int>& indices, const vector<glm::vec3>& normals){
 
 	rapidjson::Document jsonDoc;
 	jsonDoc.SetObject();
@@ -41,6 +41,25 @@ void MeshSerializer::serialize(const char* fileName, const vector<glm::vec3>& ve
 		indexArray.SetString(str.c_str(), allocator);
 		jsonDoc.AddMember("indexArray", indexArray, allocator);
 	}
+	// normal array
+	rapidjson::Value normalArray(rapidjson::kArrayType);
+	for (auto iter = normals.begin(); iter != normals.end(); ++iter){
+
+		rapidjson::Value objValue;
+		objValue.SetObject();
+		char temp[64];
+		sprintf_s(temp, sizeof(temp), "%f,%f,%f", iter->x, iter->y, iter->z);
+
+		rapidjson::Value strObj(rapidjson::kStringType);
+		strObj.SetString(temp, allocator);
+		objValue.AddMember("n", strObj, allocator);
+		normalArray.PushBack(objValue, allocator);
+	}
+
+	jsonDoc.AddMember("normalArray", normalArray, allocator);
+
+	// end of data
+
 	rapidjson::StringBuffer strbuf;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
 	jsonDoc.Accept(writer);

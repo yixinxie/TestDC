@@ -17,9 +17,11 @@ const int indexOrder[] = {
 void VoxelChunk::createDataArray(){
 	_data = new VoxelData[DataRange * DataRange * DataRange];
 }
+
 void VoxelChunk::generateMesh(){
 	tempVertices.clear();
 	tempIndices.clear();
+	tempNormals.clear();
 	const float QEF_ERROR = 1e-6f;
 	const int QEF_SWEEPS = 4;
 	QefSolver solver;
@@ -31,9 +33,11 @@ void VoxelChunk::generateMesh(){
 			for (int x = 0; x < TraverseRange; x++){
 				int idx = calcIndex(x, y, z);
 				solver.reset();
+				vec3 accumNormal;
 				intersectionCount = 0;
-
-				
+				if (x == 2 && y == 1 && z == 12){
+					int sdf = 0;
+				}
 				// step 1
 				eight[0] = read(x, y, z);
 				eight[1] = read(x + 1, y, z);
@@ -43,16 +47,6 @@ void VoxelChunk::generateMesh(){
 				eight[5] = read(x + 1, y, z + 1);
 				eight[6] = read(x, y + 1, z + 1);
 				eight[7] = read(x + 1, y + 1, z + 1);
-
-				if (x == 2 && y == 0 && z == 0){
-					VIS_DOT(x, y, z);
-					VIS_VEC3(x, y + (float)eight[0]->intersections[1] / EDGE_SCALE, z, eight[0]->normal[1].x, eight[0]->normal[1].y, eight[0]->normal[1].z);
-					VIS_VEC3(x + 1, y + (float)eight[1]->intersections[1] / EDGE_SCALE, z, eight[1]->normal[1].x, eight[1]->normal[1].y, eight[0]->normal[1].z);
-					VIS_VEC3(x, y + (float)eight[4]->intersections[1] / EDGE_SCALE, z + 1, eight[4]->normal[1].x, eight[4]->normal[1].y, eight[0]->normal[1].z);
-					VIS_VEC3(x + 1, y + (float)eight[5]->intersections[1] / EDGE_SCALE, z + 1, eight[5]->normal[1].x, eight[5]->normal[1].y, eight[0]->normal[1].z);
-					VIS_FLUSH;
-				}
-
 
 				unsigned char baseMat = eight[0]->material;
 				// step 2
@@ -65,22 +59,22 @@ void VoxelChunk::generateMesh(){
 				else if (baseMat != 0 && eight[4]->material == 0)zmin = 0;
 
 				// step 3
-				solverAddX(eight[1]->material, eight[0], solver, intersectionCount, 0, 0, 0);
-				solverAddY(eight[2]->material, eight[0], solver, intersectionCount, 0, 0, 0);
-				solverAddZ(eight[4]->material, eight[0], solver, intersectionCount, 0, 0, 0);
+				solverAddX(eight[1]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
+				solverAddY(eight[2]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
+				solverAddZ(eight[4]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
 
-				solverAddZ(eight[5]->material, eight[1], solver, intersectionCount, 1, 0, 0);
-				solverAddY(eight[3]->material, eight[1], solver, intersectionCount, 1, 0, 0);
+				solverAddZ(eight[5]->material, eight[1], solver, intersectionCount, accumNormal, 1, 0, 0);
+				solverAddY(eight[3]->material, eight[1], solver, intersectionCount, accumNormal, 1, 0, 0);
 
-				solverAddX(eight[3]->material, eight[2], solver, intersectionCount, 0, 1, 0);
-				solverAddZ(eight[6]->material, eight[2], solver, intersectionCount, 0, 1, 0);
+				solverAddX(eight[3]->material, eight[2], solver, intersectionCount, accumNormal, 0, 1, 0);
+				solverAddZ(eight[6]->material, eight[2], solver, intersectionCount, accumNormal, 0, 1, 0);
 
-				solverAddX(eight[5]->material, eight[4], solver, intersectionCount, 0, 0, 1);
-				solverAddY(eight[6]->material, eight[4], solver, intersectionCount, 0, 0, 1);
+				solverAddX(eight[5]->material, eight[4], solver, intersectionCount, accumNormal, 0, 0, 1);
+				solverAddY(eight[6]->material, eight[4], solver, intersectionCount, accumNormal, 0, 0, 1);
 
-				solverAddZ(eight[7]->material, eight[3], solver, intersectionCount, 1, 1, 0);
-				solverAddY(eight[7]->material, eight[5], solver, intersectionCount, 1, 0, 1);
-				solverAddX(eight[7]->material, eight[6], solver, intersectionCount, 0, 1, 1);
+				solverAddZ(eight[7]->material, eight[3], solver, intersectionCount, accumNormal, 1, 1, 0);
+				solverAddY(eight[7]->material, eight[5], solver, intersectionCount, accumNormal, 1, 0, 1);
+				solverAddX(eight[7]->material, eight[6], solver, intersectionCount, accumNormal, 0, 1, 1);
 
 
 				// step 4 : calculate the minimizer position
@@ -91,19 +85,27 @@ void VoxelChunk::generateMesh(){
 					if (res.x < 0 || res.x > 1.0f ||
 						res.y < 0 || res.y > 1.0f ||
 						res.z < 0 || res.z > 1.0f){
-						int sdf = 0;
+						VIS_DOT(x, y, z);
+						VIS_VEC3(x, y + (float)eight[0]->intersections[1] / EDGE_SCALE, z, eight[0]->normal[1].x, eight[0]->normal[1].y, eight[0]->normal[1].z);
+						VIS_VEC3(x + 1, y + (float)eight[1]->intersections[1] / EDGE_SCALE, z, eight[1]->normal[1].x, eight[1]->normal[1].y, eight[0]->normal[1].z);
+						VIS_VEC3(x, y + (float)eight[4]->intersections[1] / EDGE_SCALE, z + 1, eight[4]->normal[1].x, eight[4]->normal[1].y, eight[0]->normal[1].z);
+						VIS_VEC3(x + 1, y + (float)eight[5]->intersections[1] / EDGE_SCALE, z + 1, eight[5]->normal[1].x, eight[5]->normal[1].y, eight[0]->normal[1].z);
+						
 					}
-
 					res.x += x;
 					res.y += y;
 					res.z += z;
-
 					
-
 					tempVertices.push_back(vec3(res.x, res.y, res.z));
 					// store the vertex Id to the index map.
 					indexMap[idx] = vertexId;
 					vertexId++;
+					accumNormal = glm::normalize(accumNormal);
+					tempNormals.push_back(accumNormal);
+					if (accumNormal.x != accumNormal.x || accumNormal.y != accumNormal.y || accumNormal.z != accumNormal.z){
+						int sdf = 0;
+					}
+
 				}
 				/* step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
 				   as indicated in step 2
@@ -111,7 +113,6 @@ void VoxelChunk::generateMesh(){
 				   is the axis shooting into the surface, or shooting out of the surface?
 				   we also need to make sure when one axis has an intersection, the other two axis are not
 				   on the minimal edges of the chunk.
-
 				*/
 				
 				if (xmin != -1){

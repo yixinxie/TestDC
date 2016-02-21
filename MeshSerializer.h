@@ -11,5 +11,5 @@ using namespace std;
 class MeshSerializer{
 private:
 public:
-	static void serialize(const char* fileName, const vector<glm::vec3>& vertices, const vector<unsigned int>& indices);
+	static void serialize(const char* fileName, const vector<glm::vec3>& vertices, const vector<unsigned int>& indices, const vector<glm::vec3>& normals);
 };

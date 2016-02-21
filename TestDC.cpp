@@ -5,6 +5,7 @@
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
 #include "HeightMapSampler.h"
+#include "DCT.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -31,22 +32,28 @@ void main(void){
 		OctreeNode::generateMinimizers(&root);*/
 	}
 	
-	
-	SamplerFunction* sampler = new SF_Box();
-	//((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
-	((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
-	
-	
-	SamplerFunction* heightmapSampler = new SF_Heightmap();
-	((SF_Heightmap*)heightmapSampler)->loadPNG(ivec2(64, 64), "assets/dc2.png");
-	((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0,0,0), ivec3(62,15,62));
+	if(false){
+		SamplerFunction* sampler = new SF_Box();
+		//((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
+		((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
-	VoxelManager vm;
-	vm.initWorldSize(64, 16, 64);
 
-	vm.performSDF(heightmapSampler);
-	vm.generateMeshes();
+		SamplerFunction* heightmapSampler = new SF_Heightmap();
+		((SF_Heightmap*)heightmapSampler)->loadPNG(ivec2(64, 64), "assets/dc2.png");
+		((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0, 0, 0), ivec3(62, 15, 62));
+
+		VoxelManager vm;
+		vm.initWorldSize(64, 16, 64);
+
+		vm.performSDF(heightmapSampler);
+		vm.generateMeshes();
+		getchar();
+		delete sampler;
+		delete heightmapSampler;
+	}
+	DCT dct;
+	dct.init();
+	dct.encode();
+	dct.decode();
 	getchar();
-	delete sampler;
-	delete heightmapSampler;
 }

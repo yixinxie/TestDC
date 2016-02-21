@@ -63,6 +63,9 @@
     <ClCompile Include="Visualize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DCT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -102,6 +105,9 @@
       <Filter>Source Files\external\lodepng</Filter>
     </ClInclude>
     <ClInclude Include="Visualize.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DCT.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

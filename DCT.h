@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 using namespace glm;
+#define DCT_DIM_SHIFT 3
 #define DCT_DIM 8
 #define DCT_TABLE(xy, uv) table0[(xy) + (uv) * DCT_DIM]
 // discrete cosine transform

@@ -6,6 +6,7 @@
 #include "MeshSerializer.h"
 #include "HeightMapSampler.h"
 #include "DCT.h"
+#include "DCT3D.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -51,11 +52,11 @@ void main(void){
 		delete sampler;
 		delete heightmapSampler;
 	}
-	DCT dct;
+	DCT3D dct;
 	dct.init();
 	dct.encode();
 	//dct.quantize(6);
-	dct.quantize(3);
+	//dct.quantize(3);
 	dct.decode();
 	printf_s("error: %f", dct.calcError());
 	getchar();

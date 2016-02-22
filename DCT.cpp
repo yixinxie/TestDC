@@ -14,13 +14,13 @@ void DCT::init(){
 	for (int i = 0; i < DCT_DIM * DCT_DIM; i++){
 		transformedData[i] = 0;
 	}
-	for (int i = 0; i < DCT_DIM; i++){
-		for (int j = 0; j < DCT_DIM; j++){
-			int index = j + i * DCT_DIM;
-			table0[index] = cos((2 * i + 1) * j * glm::pi<float>() / 16.0f);
+	for (int xy = 0; xy < DCT_DIM; xy++){
+		for (int uv = 0; uv < DCT_DIM; uv++){
+			DCT_TABLE(xy, uv) = cos((2 * xy + 1) * uv * glm::pi<float>() / DCT_DIM / 2.0f);
 
 		}
 	}
+	c0 = 1 / glm::sqrt(2);
 }
 void DCT::encode(){
 	for (int v = 0; v < DCT_DIM; v++){
@@ -29,15 +29,14 @@ void DCT::encode(){
 			float sum = 0;
 			for (int y = 0; y < DCT_DIM; y++){
 				for (int x = 0; x < DCT_DIM; x++){
-					sum += inside(u, v, x, y);
+					//sum += inside(u, v, x, y);
+					sum += _data[x + y * DCT_DIM] * DCT_TABLE(x, u) * DCT_TABLE(y, v);
 				}
 			}
-			float cu = (u == 0) ? 1 / glm::sqrt(2) : 1;
-			float cv = (v == 0) ? 1 / glm::sqrt(2) : 1;
+			float cu = (u == 0) ? c0 : 1;
+			float cv = (v == 0) ? c0 : 1;
 			
-
 			int index = u + v * DCT_DIM;
-
 			transformedData[index] = cu * cv / 4 * sum;
 		}
 	}
@@ -49,13 +48,33 @@ void DCT::decode(){
 			float sum = 0;
 			for (int v = 0; v < DCT_DIM; v++){
 				for (int u = 0; u < DCT_DIM; u++){
-					float cu = (u == 0) ? 1 / glm::sqrt(2) : 1;
-					float cv = (v == 0) ? 1 / glm::sqrt(2) : 1;
-					sum += cu * cv / 4 * decode_inside(u, v, x, y);
+					float cu = (u == 0) ? c0 : 1;
+					float cv = (v == 0) ? c0 : 1;
+					//sum += cu * cv / 4 * decode_inside(u, v, x, y);
+					sum += cu * cv / 4 * quantizedData[u + v * DCT_DIM] * DCT_TABLE(x, u) * DCT_TABLE(y, v);
 				}
 			}
 			int index = x + y * DCT_DIM;
 			decodedData[index] = sum;
 		}
 	}
+}
+float DCT::calcError(void){
+	float err = 0;
+	for (int i = 0; i < DCT_DIM * DCT_DIM; i++){
+		err += glm::pow(decodedData[i] - _data[i], 2);
+	}
+	return err;
+}
+void DCT::quantize(int length){
+	int quantizeStepper[] = { 0, 1, 8, 16, 9, 2, 3, 10, 17, 24,
+		32, 25, 18, 11, 4 };
+	for (int i = 0; i < DCT_DIM * DCT_DIM; i++){
+		quantizedData[i] = 0;
+	}
+	for (int i = 0; i < length; i++){
+		quantizedData[quantizeStepper[i]] = transformedData[quantizeStepper[i]];
+	}
+	
+
 }

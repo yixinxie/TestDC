@@ -54,6 +54,9 @@ void main(void){
 	DCT dct;
 	dct.init();
 	dct.encode();
+	//dct.quantize(6);
+	dct.quantize(3);
 	dct.decode();
+	printf_s("error: %f", dct.calcError());
 	getchar();
 }

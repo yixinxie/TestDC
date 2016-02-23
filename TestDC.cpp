@@ -55,7 +55,7 @@ void main(void){
 	DCT3D dct;
 	dct.init();
 	dct.encode();
-	//dct.quantize(6);
+	dct.quantize(2);
 	//dct.quantize(3);
 	dct.decode();
 	printf_s("error: %f", dct.calcError());

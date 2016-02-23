@@ -1,15 +1,6 @@
 #include "DCT3D.h"
+#include "stdio.h"
 void DCT3D::init(){
-	float initialData[] = {
-		120,	108,	90,		75,	69,	73,	82,	89,
-		127,	115,	97,		81,	75,	79,	88,	95,
-		134,	122,	105,	89,	83,	87,	96,	103,
-		137,	125,	107,	92,	86,	90,	99,	106,
-		131,	119,	101,	86,	80,	83,	93,	100,
-		117,	105,	87,		72,	65,	69,	78,	85,
-		100,	88,		70,		55,	49,	53,	62,	69,
-		89,		77,		59,		44,	38,	42,	51,	58, };
-	memcpy_s(_data, sizeof(initialData), initialData, sizeof(initialData));
 
 	for (int i = 0; i < Dct3D_Size; i++){
 		_data[i] = 500 + (i % 8);
@@ -20,6 +11,8 @@ void DCT3D::init(){
 		}
 	}
 	c0 = 1 / glm::sqrt(2);
+	initQuantizationIndices();
+	
 }
 void DCT3D::encode(){
 	for (int w = 0; w < DCT3D_DIM; w++){
@@ -56,7 +49,7 @@ void DCT3D::decode(){
 							float cu = (u == 0) ? c0 : 1;
 							float cv = (v == 0) ? c0 : 1;
 							float cw = (w == 0) ? c0 : 1;
-							sum += cu * cv * cw / 8 * transformedData[u + (v << DCT3D_DIM_SHIFT) + (w << DCT3D_DIM_SHIFT_2)] * DCT3D_TABLE(x, u) * DCT3D_TABLE(y, v) * DCT3D_TABLE(z, w);
+							sum += cu * cv * cw / 8 * quantizedData[u + (v << DCT3D_DIM_SHIFT) + (w << DCT3D_DIM_SHIFT_2)] * DCT3D_TABLE(x, u) * DCT3D_TABLE(y, v) * DCT3D_TABLE(z, w);
 						}
 					}
 				}
@@ -73,15 +66,49 @@ float DCT3D::calcError(void){
 	}
 	return err;
 }
-void DCT3D::quantize(int length){
-	int quantizeStepper[] = { 0, 1, 8, 16, 9, 2, 3, 10, 17, 24,
-		32, 25, 18, 11, 4 };
+void DCT3D::quantize(int level){
+	int quantizeLength = quantizeLevels[level];
+
 	for (int i = 0; i < Dct3D_Size; i++){
 		quantizedData[i] = 0;
 	}
-	for (int i = 0; i < length; i++){
+	for (int i = 0; i < quantizeLength; i++){
 		quantizedData[quantizeStepper[i]] = transformedData[quantizeStepper[i]];
 	}
 	
 
+}
+void DCT3D::initQuantizationIndices(){
+	quantizeStepper = new int[Dct3D_Size / 2];
+
+	for (int i = 0; i < Dct3D_Size / 2; i++){
+		quantizeStepper[i] = -1;
+	}
+
+	int incr = 0;
+	quantizeStepper[incr] = 0;
+	incr++;
+	quantizeLevels[0] = 1;
+	for (int i = 1; i < DCT3D_DIM; i++){
+		printf_s("%d------->\n", i);
+		for (int j = 0; j <= i; j++){
+			int a = i - j;
+			int b = j;
+			int c = 0;
+			while (a >= 0){
+				int index = a + (b << DCT3D_DIM_SHIFT) + (c << DCT3D_DIM_SHIFT_2);
+				printf_s("%d, %d, %d-- %d\n", a, b, c, index);
+				quantizeStepper[incr] = index;
+				incr++;
+
+				a--;
+				c++;
+			}
+			
+		}
+		quantizeLevels[i] = incr;
+	}
+	for (int i = 0; i < DCT3D_DIM; i++){
+		printf_s("%d, ", quantizeLevels[i]);
+	}
 }

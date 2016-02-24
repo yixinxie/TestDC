@@ -9,7 +9,7 @@
 #include "DCT3D.h"
 using namespace svd;
 void main(void){
-	if (false){
+	if (true){
 		const float QEF_ERROR = 1e-6f;
 		const int QEF_SWEEPS = 4;
 
@@ -52,12 +52,14 @@ void main(void){
 		delete sampler;
 		delete heightmapSampler;
 	}
-	DCT3D dct;
-	dct.init();
-	dct.encode();
-	dct.quantize(2);
-	//dct.quantize(3);
-	dct.decode();
-	printf_s("error: %f", dct.calcError());
+	if (false){
+		DCT3D dct;
+		dct.init();
+		dct.encode();
+		dct.quantize(2);
+		//dct.quantize(3);
+		dct.decode();
+		printf_s("error: %f", dct.calcError());
+	}
 	getchar();
 }

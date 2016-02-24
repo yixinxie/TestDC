@@ -38,7 +38,7 @@ void VoxelChunk::generateMesh(){
 				if (x == 2 && y == 1 && z == 12){
 					int sdf = 0;
 				}
-				// step 1
+				// step 1: get the pointers to the 8 neighbour cells.
 				eight[0] = read(x, y, z);
 				eight[1] = read(x + 1, y, z);
 				eight[2] = read(x, y + 1, z);
@@ -49,7 +49,7 @@ void VoxelChunk::generateMesh(){
 				eight[7] = read(x + 1, y + 1, z + 1);
 
 				unsigned char baseMat = eight[0]->material;
-				// step 2
+				// step 2 : determine the indices from any crossing on the 3 minimal axis/edges.
 				int xmin = -1, ymin = -1, zmin = -1;
 				if (baseMat == 0 && eight[1]->material != 0)xmin = 1;
 				else if (baseMat != 0 && eight[1]->material == 0)xmin = 0;
@@ -58,7 +58,8 @@ void VoxelChunk::generateMesh(){
 				if (baseMat == 0 && eight[4]->material != 0)zmin = 1;
 				else if (baseMat != 0 && eight[4]->material == 0)zmin = 0;
 
-				// step 3
+				// step 3 : add the intersections and their normals to the solver, up to 12 intersections/edges.
+				// at the same time, increment the intersection count and normal accumulation.
 				solverAddX(eight[1]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
 				solverAddY(eight[2]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
 				solverAddZ(eight[4]->material, eight[0], solver, intersectionCount, accumNormal, 0, 0, 0);
@@ -100,6 +101,8 @@ void VoxelChunk::generateMesh(){
 					// store the vertex Id to the index map.
 					indexMap[idx] = vertexId;
 					vertexId++;
+
+					// average the normals accumulated from all the intersecting edges.
 					accumNormal = glm::normalize(accumNormal);
 					tempNormals.push_back(accumNormal);
 					if (accumNormal.x != accumNormal.x || accumNormal.y != accumNormal.y || accumNormal.z != accumNormal.z){
@@ -107,15 +110,33 @@ void VoxelChunk::generateMesh(){
 					}
 
 				}
-				/* step 5 : build a quad for any of the three minimal edge that has mismatching material pair, 
+				/* step 5 : build a quad for any of the three minimal edge that has mismatching material ends, 
 				   as indicated in step 2
 				   xmin, ymin, zmin somewhat indicate the normal at the intersection, as in,
 				   is the axis shooting into the surface, or shooting out of the surface?
-				   we also need to make sure when one axis has an intersection, the other two axis are not
-				   on the minimal edges of the chunk.
+				   -1: the x axis/edge has no intersection;
+				   0: the x axis/edge is pointing into a surface.
+				   1: the x axis/edge is pointing from the inside of a surface.
+				   the same applies to the y and z axis/edges.
+				   pointing inwards/outwards a surface would dictate the order we wind the triangles.
+				*/
+				/*
+				a note on the octree implementation:
+				we would like to experiment with a method that attempts to solve the seams between different lod chunks.
+				we need to first separate the generation of vertices and indices(quads) into two phases.
+				the first phase would include the generation of vertices, minimizers using the qef method.
+				in addition to this, we also duplicate the vertices that are on the minimal planes of a chunk
+				to the chunk before it.
+				so in the second phase in which we need to generate the indices(quads), we can generate quads
+				between two chunks that are on different lod levels.
+
 				*/
 				
 				if (xmin != -1){
+					/*
+					we also skip generating the indices(quad) when the running cell is at one of
+					the minimal surfaces.
+					*/
 					if (y != 0 && z != 0 && x != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));

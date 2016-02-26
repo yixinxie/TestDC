@@ -2,7 +2,7 @@
 #include <vector>
 #include "Visualize.h"
 using namespace std;
-unsigned int VoxelChunk::indexMap[DataRange * DataRange * DataRange];
+//unsigned int VoxelChunk::indexMap[DataRange * DataRange * DataRange];
 const int indexOrder[] = {
 	-1, -1,
 	0, -1,
@@ -19,9 +19,8 @@ void VoxelChunk::createDataArray(){
 	memset(_data, 0, sizeof(VoxelData) * DataRange * DataRange * DataRange);
 }
 
-void VoxelChunk::generateMesh(){
+void VoxelChunk::generateVertices(){
 	tempVertices.clear();
-	tempIndices.clear();
 	tempNormals.clear();
 	const float QEF_ERROR = 1e-6f;
 	const int QEF_SWEEPS = 4;
@@ -29,10 +28,16 @@ void VoxelChunk::generateMesh(){
 	VoxelData* eight[8];
 	int intersectionCount;
 	int vertexId = 0;
-	for (int z = 0; z < TraverseRange; z++){
-		for (int y = 0; y < TraverseRange; y++){
-			for (int x = 0; x < TraverseRange; x++){
-				int idx = calcIndex(x, y, z);
+	{
+		int indexMapLength = UsableRange * UsableRange * UsableRange;
+		for (int i = 0; i < indexMapLength; i++){
+			indexMap[i] = -1;
+		}
+	}
+	for (int z = 0; z < UsableRange; z++){
+		for (int y = 0; y < UsableRange; y++){
+			for (int x = 0; x < UsableRange; x++){
+				int idx = calcDataIndex(x, y, z);
 				solver.reset();
 				vec3 accumNormal;
 				intersectionCount = 0;
@@ -103,8 +108,12 @@ void VoxelChunk::generateMesh(){
 					
 					tempVertices.push_back(vec3(res.x, res.y, res.z));
 					// store the vertex Id to the index map.
-					indexMap[idx] = vertexId;
+					/*indexMap[idx] = vertexId;
+					vertexId++;*/
+					int idx2 = calcUsableIndex(x, y, z);
+					indexMap[idx2] = vertexId;
 					vertexId++;
+
 
 					// average the normals accumulated from all the intersecting edges.
 					accumNormal = glm::normalize(accumNormal);
@@ -114,15 +123,62 @@ void VoxelChunk::generateMesh(){
 					}
 
 				}
-				/* step 5 : build a quad for any of the three minimal edge that has mismatching material ends, 
-				   as indicated in step 2
-				   xmin, ymin, zmin somewhat indicate the normal at the intersection, as in,
-				   is the axis shooting into the surface, or shooting out of the surface?
-				   -1: the x axis/edge has no intersection;
-				   0: the x axis/edge is pointing into a surface.
-				   1: the x axis/edge is pointing from the inside of a surface.
-				   the same applies to the y and z axis/edges.
-				   pointing inwards/outwards a surface would dictate the order we wind the triangles.
+			}
+		}
+	}
+}
+
+void VoxelChunk::generateIndices(){
+	tempIndices.clear();
+	VoxelData* eight[8];
+	int intersectionCount;
+	int vertexId = 0;
+	for (int z = 0; z < UsableRange; z++){
+		for (int y = 0; y < UsableRange; y++){
+			for (int x = 0; x < UsableRange; x++){
+				int idx = calcDataIndex(x, y, z);
+				intersectionCount = 0;
+				if (x == 1 && y == 1 && z == 0){
+					int sdf = 0;
+				}
+				// step 1: get the pointers to the 8 voxels surrounding this cell.
+				eight[0] = read(x, y, z);
+				eight[1] = read(x + 1, y, z);
+				eight[2] = read(x, y + 1, z);
+				eight[3] = read(x + 1, y + 1, z);
+				eight[4] = read(x, y, z + 1);
+				eight[5] = read(x + 1, y, z + 1);
+				eight[6] = read(x, y + 1, z + 1);
+				eight[7] = read(x + 1, y + 1, z + 1);
+
+				unsigned char baseMat = eight[0]->material;
+				// step 2 : determine the indices from any crossing on the 3 minimal axis/edges.
+				int xmin = -1, ymin = -1, zmin = -1;
+				if (baseMat == 0 && eight[1]->material != 0)xmin = 1;
+				else if (baseMat != 0 && eight[1]->material == 0)xmin = 0;
+				if (baseMat == 0 && eight[2]->material != 0)ymin = 1;
+				else if (baseMat != 0 && eight[2]->material == 0)ymin = 0;
+				if (baseMat == 0 && eight[4]->material != 0)zmin = 1;
+				else if (baseMat != 0 && eight[4]->material == 0)zmin = 0;
+
+
+				if (intersectionCount > 0)
+				{
+					// store the vertex Id to the index map.
+					/*int idx2 = calcIndex(x, y, z);
+					indexMap[idx2] = vertexId;
+					vertexId++;*/
+
+				}
+				/* step 5 : build a quad for any of the three minimal edge that has mismatching material ends,
+				as indicated in step 2
+				xmin, ymin, zmin somewhat indicate the normal at the intersection, as in,
+				is the axis shooting into the surface, or shooting out of the surface?
+				-1: the x axis/edge has no intersection;
+				0: the x axis/edge is pointing into a surface.
+				1: the x axis/edge is pointing from the inside of a surface.
+				the same applies to the y and z axis/edges.
+				pointing inwards/outwards a surface would dictate the order we wind the triangles.
 				*/
 				/*
 				a note on the octree implementation:
@@ -135,7 +191,7 @@ void VoxelChunk::generateMesh(){
 				between two chunks that are on different lod levels.
 
 				*/
-				
+
 				if (xmin != -1){
 					/*
 					we also skip generating the indices(quad) when the running cell is at one of
@@ -144,16 +200,16 @@ void VoxelChunk::generateMesh(){
 					//if (y != 0 && z != 0 && x != 0){
 					if (y != 0 && z != 0){
 						/*if (x == UsableRange){
-							if (zmin != -1){
-								// find the corresponding vc edge desc
-								int v0 = readVertexIndex(x - 1, y, z);
-								int v1 = readVertexIndex(x - 1, y - 1, z);
-								VoxelChunkEdgeDesc* edgeDesc = &edgeDescs[0];
-								if (edgeDesc->lodDiff == 2){
+						if (zmin != -1){
+						// find the corresponding vc edge desc
+						int v0 = readVertexIndex(x - 1, y, z);
+						int v1 = readVertexIndex(x - 1, y - 1, z);
+						VoxelChunkEdgeDesc* edgeDesc = &edgeDescs[0];
+						if (edgeDesc->lodDiff == 2){
 
-								}
+						}
 
-							}
+						}
 						}
 						else*/{
 							tempIndices.push_back(readVertexIndex(x, y, z));
@@ -203,7 +259,6 @@ void VoxelChunk::generateMesh(){
 	//}
 	//printf_s("\n");
 }
-
 void VoxelChunk::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
 	const ivec3 maxBound = sampler->getMaxBound();
@@ -252,7 +307,7 @@ void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler)
 	}
 }
 void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
-	int idx = calcIndex(x, y, z);
+	int idx = calcDataIndex(x, y, z);
 	if (_data == nullptr)createDataArray();
 	//_data[idx] = vData;
 
@@ -269,4 +324,37 @@ void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
 }
 void VoxelChunk::setAdjacentLod(int faceId, int alod){
 	edgeDescs[faceId].init(faceId, alod);
+}
+// adjChunk should be at the negative side of *this chunk.
+void VoxelChunk::createEdgeDesc(VoxelChunk* adjChunk, int loc0, int loc1){
+	// this value should be derived from the positions and lod values of the two chunks.
+	int edgeDescIdx = 0; 
+	
+	VoxelChunkEdgeDesc* edgeDesc;
+	edgeDesc = &(adjChunk->edgeDescs[edgeDescIdx]);
+	int indexWidth = UsableRange * 2;
+	if (edgeDesc->indexMap == nullptr){
+		// if adjChunk covers more volume than this(less detailed),
+		// we want to make the indexMap twice as large as its original slice.
+		edgeDesc->indexMap = new int[indexWidth * indexWidth];
+		memset(edgeDesc->indexMap, 0, indexWidth * indexWidth * sizeof(int));
+	}
+	int vertIncre = adjChunk->tempVertices.size();
+	// first: go with the z-plane
+	for (int y = 0; y < UsableRange; y++){
+		for (int x = 0; x < UsableRange; x++){
+			int vidx = readVertexIndex(x, y, 0);
+			if (vidx == -1)continue;
+			vec3 vert = tempVertices[vidx];
+			adjChunk->tempVertices.push_back(vert);
+			vec3 normal = tempNormals[vidx];
+			adjChunk->tempNormals.push_back(normal);
+			int idx = x + loc0 + (y + loc1) * indexWidth;
+			edgeDesc->indexMap[idx] = vertIncre;
+
+			vertIncre++;
+		}
+
+	}
+	
 }

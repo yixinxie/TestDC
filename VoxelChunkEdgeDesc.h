@@ -20,8 +20,6 @@ public:
 	2: the neighbouring chunk has more details, covers 0.5x volume.
 	*/
 	int lodDiff;
-	std::vector<vec3> seamVertices;
-	std::vector<vec3> seamNormals; // normals on the vertices.
 	VoxelChunkEdgeDesc(void);
 	~VoxelChunkEdgeDesc();
 

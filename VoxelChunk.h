@@ -16,27 +16,30 @@ public:
 	static const int UsableRange = 1 << UsableRangeShift;
 	// for array based chunk storage, we set DataRange = UsableRange + 2, TraverseRange = UsableRage + 1
 	// but for octree based storage, we set DataRange = UsableRange + 1, TraverseRange = UsableRange
-	static const int TraverseRange = UsableRange;
+	//static const int TraverseRange = UsableRange;
 	static const int DataRange = UsableRange + 1;
 	
 	
 private:
 	VoxelData* _data;
-	static unsigned int indexMap[DataRange * DataRange * DataRange];
+	int indexMap[UsableRange * UsableRange * UsableRange];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
 	std::vector<vec3> tempNormals;
-	inline int calcIndex(int x, int y, int z){
+	inline int calcDataIndex(int x, int y, int z){
 		return x + y * DataRange + z * DataRange * DataRange;
+	}
+	inline int calcUsableIndex(int x, int y, int z){
+		return x + y * UsableRange + z * UsableRange * UsableRange;
 	}
 
 	inline VoxelData* read(const int x, const int y, const int z){
-		int idx = calcIndex(x, y, z);
+		int idx = calcDataIndex(x, y, z);
 		return &_data[idx];
 	}
 	inline int readVertexIndex(const int x, const int y, const int z){
-		return indexMap[calcIndex(x, y, z)];
+		return indexMap[calcUsableIndex(x, y, z)];
 	}
 	inline void solverAddX(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, vec3& accumNormal, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
@@ -70,9 +73,10 @@ public:
 	VoxelChunk(void) :_data(nullptr){};
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
-	void customSDF(SamplerFunction* sf);
+
 	void createDataArray(void);
-	void generateMesh(void);
+	void generateVertices(void);
+	void generateIndices(void);
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
 	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
 	inline const std::vector<vec3>& getNormals(void){ return tempNormals; };
@@ -81,5 +85,6 @@ public:
 	// experimental
 	
 	void setAdjacentLod(int faceId, int alod);
-	void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
+	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
+	void createEdgeDesc(VoxelChunk* adjChunk, int loc0, int loc1);
 };

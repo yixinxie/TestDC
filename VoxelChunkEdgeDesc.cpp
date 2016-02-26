@@ -3,7 +3,7 @@
 VoxelChunkEdgeDesc::VoxelChunkEdgeDesc() : indexMap(nullptr), lodDiff(-1){
 }
 VoxelChunkEdgeDesc::~VoxelChunkEdgeDesc(){
-	delete indexMap;
+	if(indexMap != nullptr)delete indexMap;
 }
 void VoxelChunkEdgeDesc::init(int faceId, int lodd){
 	if (lodDiff != lodd)

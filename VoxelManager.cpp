@@ -105,7 +105,9 @@ void VoxelManager::generateMeshes(){
 	for (auto it = chunks.begin(); it != chunks.end(); it++){
 		int key = it->first;
 		VoxelChunk* voxelChunk = it->second;
-		voxelChunk->generateMesh();
+		voxelChunk->generateVertices();
+		voxelChunk->generateIndices();
+		
 		int x, y, z, w;
 		calcChunkXYZW(key, x, y, z, w);
 		char tmp[128];

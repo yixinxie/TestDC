@@ -19,7 +19,7 @@ void SF_Box::setSpecs(const vec3& min, const vec3& max){
 	maxBound.z = (int)floor(rectMax.z) + 1;
 	maxBound = clamp(maxBound, ivec3(0, 0, 0), ivec3(VoxelChunk::UsableRange, VoxelChunk::UsableRange, VoxelChunk::UsableRange));
 }
-unsigned char SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
+unsigned char SF_Box::materialFunc(const ivec3& pos, const int cellSize, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
 	unsigned char material = 0;
 	if (pos.x >= rectMin.x &&
 		pos.x <= rectMax.x &&
@@ -38,38 +38,38 @@ unsigned char SF_Box::materialFunc(const ivec3& pos, vec3* intersects, vec3* out
 	*/
 	if (pos.y >= rectMin.y && pos.y <= rectMax.y &&
 		pos.z >= rectMin.z && pos.z <= rectMax.z){
-		if (pos.x <= rectMin.x && pos.x + 1 >= rectMin.x){
+		if (pos.x <= rectMin.x && pos.x + cellSize >= rectMin.x){
 
 			*outNormal0 = vec3(-1, 0, 0);
-			intersects->x = rectMin.x - pos.x;
+			intersects->x = (rectMin.x - pos.x) / (float)cellSize;
 		}
-		else if( pos.x <= rectMax.x && pos.x + 1>= rectMax.x){
+		else if (pos.x <= rectMax.x && pos.x + cellSize >= rectMax.x){
 			*outNormal0 = vec3(1, 0, 0);
-			intersects->x = rectMax.x - pos.x;
+			intersects->x = (rectMax.x - pos.x) / (float)cellSize;
 		}
 	}
 	if (pos.x >= rectMin.x && pos.x <= rectMax.x &&
 		pos.z >= rectMin.z && pos.z <= rectMax.z){
-		if (pos.y <= rectMin.y && pos.y + 1 >= rectMin.y){
+		if (pos.y <= rectMin.y && pos.y + cellSize >= rectMin.y){
 
 			*outNormal1 = vec3(0, -1, 0);
-			intersects->y = rectMin.y - pos.y;
+			intersects->y = (rectMin.y - pos.y) / (float)cellSize;
 		}
-		else if (pos.y <= rectMax.y && pos.y + 1 >= rectMax.y){
+		else if (pos.y <= rectMax.y && pos.y + cellSize >= rectMax.y){
 			*outNormal1 = vec3(0, 1, 0);
-			intersects->y = rectMax.y - pos.y;
+			intersects->y = (rectMax.y - pos.y) / (float)cellSize;
 		}
 	}
 	if (pos.y >= rectMin.y && pos.y <= rectMax.y &&
 		pos.x >= rectMin.x && pos.x <= rectMax.x){
-		if (pos.z <= rectMin.z && pos.z + 1 >= rectMin.z){
+		if (pos.z <= rectMin.z && pos.z + cellSize >= rectMin.z){
 
 			*outNormal2 = vec3(0, 0, -1);
-			intersects->z = rectMin.z - pos.z;
+			intersects->z = (rectMin.z - pos.z) / (float)cellSize;
 		}
-		else if (pos.z <= rectMax.z && pos.z + 1 >= rectMax.z){
+		else if (pos.z <= rectMax.z && pos.z + cellSize >= rectMax.z){
 			*outNormal2 = vec3(0, 0, 1);
-			intersects->z = rectMax.z - pos.z;
+			intersects->z = (rectMax.z - pos.z) / (float)cellSize;
 		}
 	}
 

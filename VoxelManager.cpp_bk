@@ -1,14 +1,27 @@
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
 #include "Visualize.h"
+void VoxelManager::zeroChunkPointers(){
+	for (int z = 0; z < zCount; z++){
+		for (int y = 0; y < yCount; y++){
+			for (int x = 0; x < xCount; x++){
+				int chunkIndex = calcChunkIndex(x, y, z);
+				chunks[chunkIndex] = nullptr;
+			}
+		}
+	}
+}
 void VoxelManager::initChunkSize(int _xcount, int _ycount, int _zcount){
 	xCount = _xcount;
 	yCount = _ycount;
 	zCount = _zcount;
+	chunks = new VoxelChunk*[xCount * yCount * zCount];
 
 	worldBoundX = xCount * VoxelChunk::UsableRange;
 	worldBoundY = yCount * VoxelChunk::UsableRange;
 	worldBoundZ = zCount * VoxelChunk::UsableRange;
+
+	zeroChunkPointers();
 }
 
 void VoxelManager::initWorldSize(int _sizeX, int _sizeY, int _sizeZ){
@@ -22,8 +35,10 @@ void VoxelManager::initWorldSize(int _sizeX, int _sizeY, int _sizeZ){
 	if (xCount == 0)xCount = 1;
 	if (yCount == 0)yCount = 1;
 	if (zCount == 0)zCount = 1;
+	chunks = new VoxelChunk*[xCount * yCount * zCount];
+	zeroChunkPointers();
 }
-void VoxelManager::write(const VoxelData& vData, const int x, const int y, const int z, const int w){
+void VoxelManager::write(const VoxelData& vData, const int x, const int y, const int z){
 	int chunkPosX = x >> VoxelChunk::UsableRangeShift;
 	int chunkPosY = y >> VoxelChunk::UsableRangeShift;
 	int chunkPosZ = z >> VoxelChunk::UsableRangeShift;
@@ -31,7 +46,7 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	int localY = y % VoxelChunk::UsableRange;
 	int localZ = z % VoxelChunk::UsableRange;
 
-	int chunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ, 0);
+	int chunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ);
 	createIfNeeded(chunkIndex);
 	chunks[chunkIndex]->writeRaw(localX, localY, localZ, vData);
 	int chunkOffsetX = 0;
@@ -51,21 +66,21 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	if (chunkOffsetX < 0 
 		&& chunkPosX + chunkOffsetX >= 0){
 		
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY, localZ, vData);
 	}
 	if (chunkOffsetY < 0 
 		&& chunkPosY + chunkOffsetY >= 0){
 
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelChunk::UsableRange, localZ, vData);
 	}
 	if (chunkOffsetZ < 0
 		&& chunkPosZ + chunkOffsetZ >= 0){
 
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ + chunkOffsetZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ + chunkOffsetZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX, localY, localZ + VoxelChunk::UsableRange, vData);
 	}
@@ -73,21 +88,21 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	if (chunkOffsetX < 0 && chunkOffsetY < 0 
 		&& chunkPosX + chunkOffsetX >= 0 && chunkPosY + chunkOffsetY >= 0){
 
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY + VoxelChunk::UsableRange, localZ, vData);
 	}
 	if (chunkOffsetY < 0 && chunkOffsetZ < 0 
 		&& chunkPosY + chunkOffsetY >= 0 && chunkPosZ + chunkOffsetZ >= 0){
 
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelChunk::UsableRange, localZ + VoxelChunk::UsableRange, vData);
 	}
 	if (chunkOffsetX < 0 && chunkOffsetZ < 0 
 		&& chunkPosX + chunkOffsetX >= 0 && chunkPosZ + chunkOffsetZ >= 0){
 
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ + chunkOffsetZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ + chunkOffsetZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY, localZ + VoxelChunk::UsableRange, vData);
 	}
@@ -95,25 +110,13 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	if (chunkOffsetX < 0 && chunkOffsetY < 0 && chunkOffsetZ < 0 
 		&& chunkPosX + chunkOffsetX >= 0 && chunkPosY + chunkOffsetY >= 0 && chunkPosZ + chunkOffsetZ >= 0){
 		
-		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ, w);
+		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ);
 		createIfNeeded(neighbourChunkIndex);
 		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY + VoxelChunk::UsableRange, localZ + VoxelChunk::UsableRange, vData);
 	}
 
 }
-void VoxelManager::generateMeshes(){
-	for (auto it = chunks.begin(); it != chunks.end(); it++){
-		int key = it->first;
-		VoxelChunk* voxelChunk = it->second;
-		voxelChunk->generateMesh();
-		int x, y, z, w;
-		calcChunkXYZW(key, x, y, z, w);
-		char tmp[128];
-		sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d_%d.json", x, y, z, w);
-		VoxelChunk* chunk = chunks.at(key);
-		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
-	}
-}
+
 void VoxelManager::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
 	const ivec3 maxBound = sampler->getMaxBound();
@@ -126,7 +129,7 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 				if (xi == 1 && yi == 0 && zi == 63){
 					int sdf = 0;
 				}
-				voxel.material = sampler->materialFunc(pos, 1, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
+				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
 				if (voxel.normal[1].y < 0){
 					int sdf = 0;
 				}
@@ -150,10 +153,23 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 		}
 	}
 }
+void VoxelManager::generateMeshes(){
+	for (int z = 0; z < zCount; z++){
+		for (int y = 0; y < yCount; y++){
+			for (int x = 0; x < xCount; x++){
+				int chunkIndex = calcChunkIndex(x, y, z);
+				if (x == 0 && y == 0 && z == 1){
+					int sdf = 0;
+				}
+				if (chunks[chunkIndex] != nullptr){
+					chunks[chunkIndex]->generateMesh();
+					char tmp[256];
+					
+					sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d.json", x, y, z);
+					MeshSerializer::serialize(tmp, chunks[chunkIndex]->getVertices(), chunks[chunkIndex]->getIndices(), chunks[chunkIndex]->getNormals());
+				}
+			}
+		}
 
-void VoxelManager::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
-	int key = calcChunkIndex(x, y, z, w);
-	createIfNeeded(key);
-	VoxelChunk* voxelChunk = chunks.at(key);
-	voxelChunk->customSDF(x, y, z, w, sampler);
+	}
 }

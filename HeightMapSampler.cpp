@@ -16,7 +16,7 @@ void SF_Heightmap::loadPNG(const ivec2& _dim, const char* fileName){
 	assert(error == 0);
 	imageBuffer = image.data();
 }
-unsigned char SF_Heightmap::materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
+unsigned char SF_Heightmap::materialFunc(const ivec3& pos, const int cellSize, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
 	vec3 floatPos(pos);
 	ivec2 i2pos(ivec2(pos.x, pos.z));
 	ivec2 i2posXEnd(ivec2(pos.x + 1, pos.z));

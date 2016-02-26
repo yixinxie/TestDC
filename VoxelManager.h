@@ -1,27 +1,44 @@
 #include "VoxelChunk.h"
+#include <unordered_map>
+#define MAX_LOD 3
+struct VoxelChunkNode{
+public:
+	int x, y, z;
+	int w; // level of detail
+	VoxelChunk chunk;
+};
 class VoxelManager{
 private:
-	VoxelChunk** chunks;
+	std::unordered_map<int, VoxelChunk*> chunks;
 	int xCount, yCount, zCount; // in # of chunks.
 	int worldBoundX, worldBoundY, worldBoundZ;
-	inline int calcChunkIndex(int chunkPosX, int chunkPosY, int chunkPosZ){
-		return chunkPosX + chunkPosY * xCount + chunkPosZ * xCount * yCount;
+	inline int calcChunkIndex(int chunkPosX, int chunkPosY, int chunkPosZ, int lod){
+		return (chunkPosX + chunkPosY * xCount + chunkPosZ * xCount * yCount) * MAX_LOD + lod;
+	}
+	inline void calcChunkXYZW(const int key, int& x, int& y, int& z, int& w){
+		w = key % MAX_LOD;
+		int xyz = key / MAX_LOD;
+		z = xyz / xCount / yCount;
+		int xy = xyz - z * xCount * yCount;
+		y = xy / xCount;
+		x = xy - y * xCount;
 	}
 	inline void createIfNeeded(int chunkIndex){
-		if (chunks[chunkIndex] == nullptr){
-			chunks[chunkIndex] = new VoxelChunk();
-		}
+		VoxelChunk* voxelChunk = new VoxelChunk;
+		auto it = chunks.find(chunkIndex);
+		if (it == chunks.end())
+			chunks.insert({ chunkIndex, voxelChunk });
 	}
 	void zeroChunkPointers(void);
 public:
-	VoxelManager(void):chunks(nullptr){
+	VoxelManager(void){
 	}
 	void initChunkSize(int _xcount, int _ycount, int _zcount);
 	void initWorldSize(int _sizeX, int _sizeY, int _sizeZ);
 	~VoxelManager(){
-		delete[] chunks;
 	}
-	void write(const VoxelData& vData, const int x, const int y, const int z);
+	void write(const VoxelData& vData, const int x, const int y, const int z, const int w = 0);
 	void performSDF(SamplerFunction* sampler);
 	void generateMeshes(void);
+	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 };

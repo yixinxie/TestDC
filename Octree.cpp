@@ -19,7 +19,7 @@ void OctreeNode::performSDF(SamplerFunction* sampler){
 			for (int zi = minBound.z; zi <= maxBound.z; zi++){
 				ivec3 pos = ivec3(xi, yi, zi);
 				NodeData val;
-				int material = sampler->materialFunc(pos, &val.intersects, &val.normal[0], &val.normal[1], &val.normal[2]);
+				int material = sampler->materialFunc(pos, 1, &val.intersects, &val.normal[0], &val.normal[1], &val.normal[2]);
 				//if (val.intersects.x >= 0 || val.intersects.y >= 0 || val.intersects.z >= 0){
 				//	printf_s("intersect: %f, %f, %f =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
 				//		val.intersects.x, val.intersects.y, val.intersects.z,

@@ -29,5 +29,5 @@ public:
 	~SF_Heightmap(){}
 	void setSpecs(const ivec3& from, const ivec3& to);
 	void loadPNG(const ivec2& _dim, const char* fileName);
-	unsigned char materialFunc(const ivec3& pos, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2);
+	unsigned char materialFunc(const ivec3& pos, const int cellSize, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2);
 };

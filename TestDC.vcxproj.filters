@@ -69,6 +69,9 @@
     <ClCompile Include="DCT3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VoxelChunkEdgeDesc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -114,6 +117,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="DCT3D.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelChunkEdgeDesc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

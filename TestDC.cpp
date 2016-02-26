@@ -9,7 +9,7 @@
 #include "DCT3D.h"
 using namespace svd;
 void main(void){
-	if (true){
+	if (false){
 		const float QEF_ERROR = 1e-6f;
 		const int QEF_SWEEPS = 4;
 
@@ -33,24 +33,27 @@ void main(void){
 		OctreeNode::generateMinimizers(&root);*/
 	}
 	
-	if(false){
-		SamplerFunction* sampler = new SF_Box();
-		//((SF_Box*)sampler)->setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(1.5f, 1.5f, 1.5f));
-		((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
+	if(true){
+		SF_Box sampler;// = new SF_Box();
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(7, 7, 7));
+		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
 
-		SamplerFunction* heightmapSampler = new SF_Heightmap();
+		/*SamplerFunction* heightmapSampler = new SF_Heightmap();
 		((SF_Heightmap*)heightmapSampler)->loadPNG(ivec2(64, 64), "assets/dc2.png");
-		((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0, 0, 0), ivec3(62, 15, 62));
+		((SF_Heightmap*)heightmapSampler)->setSpecs(ivec3(0, 0, 0), ivec3(62, 15, 62));*/
 
 		VoxelManager vm;
-		vm.initWorldSize(64, 16, 64);
+		vm.initWorldSize(16, 16, 16);
 
-		vm.performSDF(heightmapSampler);
+
+		//vm.performSDF(sampler);
+		vm.customSDF(0, 0, 0, 1, &sampler);
+		vm.customSDF(4, 0, 0, 0, &sampler);
+		vm.customSDF(4, 2, 0, 0, &sampler);
+//		vm.customSDF(-4, 4, 0, 2, &sampler);
 		vm.generateMeshes();
-		getchar();
-		delete sampler;
-		delete heightmapSampler;
+		//delete heightmapSampler;
 	}
 	if (false){
 		DCT3D dct;
@@ -61,5 +64,6 @@ void main(void){
 		dct.decode();
 		printf_s("error: %f", dct.calcError());
 	}
+	printf_s("done.");
 	getchar();
 }

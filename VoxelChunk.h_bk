@@ -1,6 +1,5 @@
 #pragma once
 #include "VoxelData.h"
-#include "VoxelChunkEdgeDesc.h"
 #include <vector>
 #include <glm/glm.hpp>
 #include "qef.h"
@@ -9,16 +8,12 @@
 
 using namespace glm;
 using namespace svd;
-
 class VoxelChunk{
 public:
-	static const int UsableRangeShift = 1; // # of bit shift
+	static const int UsableRangeShift = 4; // # of bit shift
 	static const int UsableRange = 1 << UsableRangeShift;
-	// for array based chunk storage, we set DataRange = UsableRange + 2, TraverseRange = UsableRage + 1
-	// but for octree based storage, we set DataRange = UsableRange + 1, TraverseRange = UsableRange
-	static const int TraverseRange = UsableRange;
-	static const int DataRange = UsableRange + 1;
-	
+	static const int TraverseRange = UsableRange + 1;
+	static const int DataRange = UsableRange + 2;
 	
 private:
 	VoxelData* _data;
@@ -65,12 +60,10 @@ private:
 			accumNormal += _vdat->normal[2];
 		}
 	}
-	VoxelChunkEdgeDesc edgeDescs[7];
 public:
 	VoxelChunk(void) :_data(nullptr){};
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
-	void customSDF(SamplerFunction* sf);
 	void createDataArray(void);
 	void generateMesh(void);
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
@@ -79,7 +72,9 @@ public:
 	void writeRaw(int x, int y, int z, const VoxelData& vData);
 	
 	// experimental
-	
-	void setAdjacentLod(int faceId, int alod);
-	void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
+	/*
+	std::vector<vec3> indexedVertices;
+	std::vector<vec3> indexedNormals;
+	static unsigned int verticeIndexMap[DataRange * DataRange * DataRange];
+	void generateVertices(void);*/
 };

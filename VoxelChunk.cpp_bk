@@ -16,7 +16,6 @@ const int indexOrder[] = {
 };
 void VoxelChunk::createDataArray(){
 	_data = new VoxelData[DataRange * DataRange * DataRange];
-	memset(_data, 0, sizeof(VoxelData) * DataRange * DataRange * DataRange);
 }
 
 void VoxelChunk::generateMesh(){
@@ -36,7 +35,7 @@ void VoxelChunk::generateMesh(){
 				solver.reset();
 				vec3 accumNormal;
 				intersectionCount = 0;
-				if (x == 1 && y == 1 && z == 0){
+				if (x == 2 && y == 1 && z == 12){
 					int sdf = 0;
 				}
 				// step 1: get the pointers to the 8 neighbour cells.
@@ -94,9 +93,6 @@ void VoxelChunk::generateMesh(){
 						VIS_VEC3(x + 1, y + (float)eight[5]->intersections[1] / EDGE_SCALE, z + 1, eight[5]->normal[1].x, eight[5]->normal[1].y, eight[0]->normal[1].z);
 						
 					}
-					if (res.x != res.x || res.y != res.y || res.z != res.z){
-						int sdf = 0;
-					}
 					res.x += x;
 					res.y += y;
 					res.z += z;
@@ -141,33 +137,17 @@ void VoxelChunk::generateMesh(){
 					we also skip generating the indices(quad) when the running cell is at one of
 					the minimal surfaces.
 					*/
-					//if (y != 0 && z != 0 && x != 0){
-					if (y != 0 && z != 0){
-						/*if (x == UsableRange){
-							if (zmin != -1){
-								// find the corresponding vc edge desc
-								int v0 = readVertexIndex(x - 1, y, z);
-								int v1 = readVertexIndex(x - 1, y - 1, z);
-								VoxelChunkEdgeDesc* edgeDesc = &edgeDescs[0];
-								if (edgeDesc->lodDiff == 2){
-
-								}
-
-							}
-						}
-						else*/{
-							tempIndices.push_back(readVertexIndex(x, y, z));
-							tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
-							tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
-							tempIndices.push_back(readVertexIndex(x, y, z));
-							tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 4], z + indexOrder[xmin * 8 + 5]));
-							tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 6], z + indexOrder[xmin * 8 + 7]));
-						}
+					if (y != 0 && z != 0 && x != 0){
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8], z + indexOrder[xmin * 8 + 1]));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 2], z + indexOrder[xmin * 8 + 3]));
+						tempIndices.push_back(readVertexIndex(x, y, z));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 4], z + indexOrder[xmin * 8 + 5]));
+						tempIndices.push_back(readVertexIndex(x, y + indexOrder[xmin * 8 + 6], z + indexOrder[xmin * 8 + 7]));
 					}
 				}
 				if (ymin != -1){
-					//if (x != 0 && z != 0 && y != 0){
-					if (x != 0 && z != 0){
+					if (x != 0 && z != 0 && y != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 1], y, z + indexOrder[ymin * 8]));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[ymin * 8 + 3], y, z + indexOrder[ymin * 8 + 2]));
@@ -177,8 +157,7 @@ void VoxelChunk::generateMesh(){
 					}
 				}
 				if (zmin != -1){
-					//if (x != 0 && y != 0 && z != 0){
-					if (x != 0 && y != 0){
+					if (x != 0 && y != 0 && z != 0){
 						tempIndices.push_back(readVertexIndex(x, y, z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8], y + indexOrder[zmin * 8 + 1], z));
 						tempIndices.push_back(readVertexIndex(x + indexOrder[zmin * 8 + 2], y + indexOrder[zmin * 8 + 3], z));
@@ -207,46 +186,34 @@ void VoxelChunk::generateMesh(){
 void VoxelChunk::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
 	const ivec3 maxBound = sampler->getMaxBound();
-	// todo: change the loop order.
-	for (int zi = minBound.z; zi <= maxBound.z; zi++){
+	for (int xi = minBound.x; xi <= maxBound.x; xi++){
 		for (int yi = minBound.y; yi <= maxBound.y; yi++){
-			for (int xi = minBound.x; xi <= maxBound.x; xi++){
+			for (int zi = minBound.z; zi <= maxBound.z; zi++){
 				ivec3 pos = ivec3(xi, yi, zi);
 				vec3 intersections;
 				VoxelData voxel;
 
-				voxel.material = sampler->materialFunc(pos, 1, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
+				voxel.material = sampler->materialFunc(pos, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
 				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
 				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
 				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
-
-				writeRaw(xi, yi, zi, voxel);
-			}
-		}
-	}
-}
-void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
-	ivec3 minBound = ivec3(x, y, z);
-	int step = 1 << (w);
-	for (int zi = 0; zi < VoxelChunk::DataRange; zi++){
-		for (int yi = 0; yi < VoxelChunk::DataRange; yi++){
-			for (int xi = 0; xi < VoxelChunk::DataRange; xi++){
-				ivec3 pos = minBound + ivec3(xi, yi, zi) * step;
-				vec3 intersections;
-				VoxelData voxel;
-				if (xi == 1 && yi == 1 && zi == 1){
-					int sdf = 0;
-				}
-
-				voxel.material = sampler->materialFunc(pos, step, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
-				if (voxel.material != 0){
-					int sdf = 0;
-				}
-				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
-				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
-				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
-
-				writeRaw(xi, yi, zi, voxel);
+				/*if (voxel.material != 0){
+					printf_s("intersect: %d, %d, %d - %d, %d, %d =(%f, %f, %f)(%f, %f, %f)(%f, %f, %f)\n",
+						xi,yi,zi,
+						voxel.intersections[0], voxel.intersections[1], voxel.intersections[2],
+						voxel.normal[0].x, voxel.normal[0].y, voxel.normal[0].z,
+						voxel.normal[1].x, voxel.normal[1].y, voxel.normal[1].z,
+						voxel.normal[2].x, voxel.normal[2].y, voxel.normal[2].z
+						);
+				}*/
+				VoxelData* readVoxel = read(xi ,yi, zi);// probably inappropriate but shortcut for now.
+				readVoxel->material = voxel.material;
+				readVoxel->normal[0] = voxel.normal[0];
+				readVoxel->normal[1] = voxel.normal[1];
+				readVoxel->normal[2] = voxel.normal[2];
+				readVoxel->intersections[0] = voxel.intersections[0];
+				readVoxel->intersections[1] = voxel.intersections[1];
+				readVoxel->intersections[2] = voxel.intersections[2];
 			}
 		}
 	}
@@ -266,7 +233,4 @@ void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
 	_data[idx].normal[1] = vData.normal[1];
 	_data[idx].normal[2] = vData.normal[2];
 
-}
-void VoxelChunk::setAdjacentLod(int faceId, int alod){
-	edgeDescs[faceId].init(faceId, alod);
 }

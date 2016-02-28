@@ -52,7 +52,15 @@ void main(void){
 		vm.customSDF(4, 0, 0, 0, &sampler);
 		vm.customSDF(4, 2, 0, 0, &sampler);
 //		vm.customSDF(-4, 4, 0, 2, &sampler);
-		vm.generateMeshes();
+		vm.generateVertices();
+		VoxelChunk* topRight = vm.readChunk(4, 2, 0, 0);
+		VoxelChunk* bottomRight = vm.readChunk(4, 0, 0, 0);
+		VoxelChunk* left = vm.readChunk(0, 0, 0, 1);
+		topRight->createEdgeDesc(0, left, 0, 1, 1);
+		bottomRight->createEdgeDesc(0, left, 0, 0, 1);
+
+		vm.generateIndices();
+		vm.exportJson();
 		//delete heightmapSampler;
 	}
 	if (false){

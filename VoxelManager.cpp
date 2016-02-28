@@ -116,6 +116,31 @@ void VoxelManager::generateMeshes(){
 		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
 	}
 }
+void VoxelManager::generateVertices(){
+	for (auto it = chunks.begin(); it != chunks.end(); it++){
+		int key = it->first;
+		VoxelChunk* voxelChunk = it->second;
+		voxelChunk->generateVertices();
+	}
+}
+void VoxelManager::generateIndices(){
+	for (auto it = chunks.begin(); it != chunks.end(); it++){
+		int key = it->first;
+		VoxelChunk* voxelChunk = it->second;
+		voxelChunk->generateIndices();
+}
+}
+void VoxelManager::exportJson(){
+	for (auto it = chunks.begin(); it != chunks.end(); it++){
+		int key = it->first;
+		int x, y, z, w;
+		calcChunkXYZW(key, x, y, z, w);
+		char tmp[128];
+		sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d_%d.json", x, y, z, w);
+		VoxelChunk* chunk = chunks.at(key);
+		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
+	}
+}
 void VoxelManager::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
 	const ivec3 maxBound = sampler->getMaxBound();

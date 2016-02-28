@@ -40,5 +40,12 @@ public:
 	void write(const VoxelData& vData, const int x, const int y, const int z, const int w = 0);
 	void performSDF(SamplerFunction* sampler);
 	void generateMeshes(void);
+	void generateVertices(void);
+	void generateIndices(void);
+	void exportJson(void);
+	inline VoxelChunk* readChunk(int x, int y, int z, int w){
+		int key = calcChunkIndex(x, y, z, w);
+		return chunks.at(key);
+	}
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 };

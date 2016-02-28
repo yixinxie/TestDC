@@ -23,6 +23,8 @@ public:
 private:
 	VoxelData* _data;
 	int indexMap[UsableRange * UsableRange * UsableRange];
+	// this can be optimized to use only 3 * 3 * UsableRange ^ 2 chars.
+	char edgeMap[UsableRange * UsableRange * UsableRange * 3];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
@@ -70,7 +72,7 @@ private:
 	}
 	VoxelChunkEdgeDesc edgeDescs[7];
 public:
-	VoxelChunk(void) :_data(nullptr){};
+	VoxelChunk(void);
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
 
@@ -86,5 +88,5 @@ public:
 	
 	void setAdjacentLod(int faceId, int alod);
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
-	void createEdgeDesc(VoxelChunk* adjChunk, int loc0, int loc1);
+	void createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod);
 };

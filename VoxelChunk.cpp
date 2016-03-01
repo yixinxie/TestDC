@@ -20,7 +20,81 @@ void VoxelChunk::createDataArray(){
 	_data = new VoxelData[DataRange * DataRange * DataRange];
 	memset(_data, 0, sizeof(VoxelData) * DataRange * DataRange * DataRange);
 }
+void VoxelChunk::performSDF(SamplerFunction* sampler){
+	const ivec3 minBound = sampler->getMinBound();
+	const ivec3 maxBound = sampler->getMaxBound();
+	// todo: change the loop order.
+	for (int zi = minBound.z; zi <= maxBound.z; zi++){
+		for (int yi = minBound.y; yi <= maxBound.y; yi++){
+			for (int xi = minBound.x; xi <= maxBound.x; xi++){
+				ivec3 pos = ivec3(xi, yi, zi);
+				vec3 intersections;
+				VoxelData voxel;
 
+				voxel.material = sampler->materialFunc(pos, 1, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
+				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
+				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
+				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
+
+				writeRaw(xi, yi, zi, voxel);
+			}
+		}
+	}
+}
+void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
+	ivec3 minBound = ivec3(x, y, z);
+	int step = 1 << (w);
+	for (int zi = 0; zi < VoxelChunk::DataRange; zi++){
+		for (int yi = 0; yi < VoxelChunk::DataRange; yi++){
+			for (int xi = 0; xi < VoxelChunk::DataRange; xi++){
+				ivec3 pos = minBound + ivec3(xi, yi, zi) * step;
+				vec3 intersections;
+				VoxelData voxel;
+				if (xi == 1 && yi == 1 && zi == 1){
+					int sdf = 0;
+				}
+
+				voxel.material = sampler->materialFunc(pos, step, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
+				if (voxel.material != 0){
+					int sdf = 0;
+				}
+				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
+				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
+				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
+
+				writeRaw(xi, yi, zi, voxel);
+			}
+		}
+	}
+}
+void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
+	int idx = calcDataIndex(x, y, z);
+	if (_data == nullptr)createDataArray();
+	//_data[idx] = vData;
+
+	_data[idx].intersections[0] = vData.intersections[0];
+	_data[idx].intersections[1] = vData.intersections[1];
+	_data[idx].intersections[2] = vData.intersections[2];
+
+	_data[idx].material = vData.material;
+
+	_data[idx].normal[0] = vData.normal[0];
+	_data[idx].normal[1] = vData.normal[1];
+	_data[idx].normal[2] = vData.normal[2];
+
+}
+void VoxelChunk::setAdjacentLod(int faceId, int alod){
+	edgeDescs[faceId].init(faceId, alod);
+}
+/*
+we would like to experiment with a method that attempts to solve the seams between different lod chunks.
+we need to first separate the generation of vertices and indices(quads) into two phases.
+the first phase would include the generation of vertices, minimizers using the qef method.
+in addition to this, we also duplicate the vertices that are on the minimal planes of a chunk
+to the chunk before it.
+so in the second phase in which we need to generate the indices(quads), we can generate quads
+between two chunks that are on different lod levels.
+*/
 void VoxelChunk::generateVertices(){
 	tempVertices.clear();
 	tempNormals.clear();
@@ -147,14 +221,14 @@ void VoxelChunk::generateIndices(){
 				if (x == 1 && y == 1 && z == 0){
 					int sdf = 0;
 				}
-				
+
 				int xmin = -1, ymin = -1, zmin = -1;
-								
+
 				xmin = edgeMap[usableIndex * 3];
 				ymin = edgeMap[usableIndex * 3 + 1];
 				zmin = edgeMap[usableIndex * 3 + 2];
-			
-				/* step 5 : build a quad for any of the three minimal edge that has mismatching material ends,
+
+				/* build a quad for any of the three minimal edge that has mismatching material ends,
 				as indicated in step 2
 				xmin, ymin, zmin somewhat indicate the normal at the intersection, as in,
 				is the axis shooting into the surface, or shooting out of the surface?
@@ -164,17 +238,7 @@ void VoxelChunk::generateIndices(){
 				the same applies to the y and z axis/edges.
 				pointing inwards/outwards a surface would dictate the order we wind the triangles.
 				*/
-				/*
-				a note on the octree implementation:
-				we would like to experiment with a method that attempts to solve the seams between different lod chunks.
-				we need to first separate the generation of vertices and indices(quads) into two phases.
-				the first phase would include the generation of vertices, minimizers using the qef method.
-				in addition to this, we also duplicate the vertices that are on the minimal planes of a chunk
-				to the chunk before it.
-				so in the second phase in which we need to generate the indices(quads), we can generate quads
-				between two chunks that are on different lod levels.
 
-				*/
 
 				if (xmin != -1){
 					/*
@@ -216,27 +280,34 @@ void VoxelChunk::generateIndices(){
 			}
 		}
 	}
+	generateEdgeTriangles(0);
+}
+void VoxelChunk::generateEdgeTriangles(int facing){
+	const int mapping[] = {
+		0, 1, 5, 2, 4,
+	};
 	// x+,  yz plane
 	VoxelChunkEdgeDesc* edgeDesc = &edgeDescs[0];
+	
 	if (edgeDesc->lodDiff != -1){
 		for (int z = 0; z < UsableRange; z++){
 			for (int y = 0; y < UsableRange; y++){
 				// first read the one from the original index table.
-				int ind0 = readVertexIndex(UsableRange - 1, y, z);
+				int ind0 = readVertexIndex(UsableRange - 1, y, z);  // ifs
 
 				// get the two edge flags from edge desc.
 				// coordinate multiplies 2 because the edge flag array in edge desc is twice as large.
-				int edgeCellIndex = edgeDesc->calcIndex(z * 2, y * 2 + 1); 
+				int edgeCellIndex = edgeDesc->calcIndex(z * 2, y * 2 + 1); // ifs 
 				// the 0th element is the z axis.
-				int zmin = edgeDesc->seamEdges[edgeCellIndex * 2];
+				char zmin = edgeDesc->seamEdges[edgeCellIndex * 2];
 				
 
 				// now we read the two indices from the table in edge desc.
-				int toIdx = edgeDesc->calcIndex(z * 2, y * 2);
+				int toIdx = edgeDesc->calcIndex(z * 2, y * 2); // ifs
 				int ind1 = edgeDesc->indexMap[toIdx];
 				toIdx = edgeDesc->calcIndex(z * 2, y * 2 + 1);
 				int ind2 = edgeDesc->indexMap[toIdx];
-
+				// only need to wind a single triangle.
 				if (zmin == 0){
 					tempIndices.push_back(ind0);
 					tempIndices.push_back(ind1);
@@ -247,77 +318,89 @@ void VoxelChunk::generateIndices(){
 					tempIndices.push_back(ind2);
 					tempIndices.push_back(ind1);
 				}
-				int ymin = edgeDesc->seamEdges[edgeCellIndex * 2 + 1];
-			}
-		}
-	}
-}
-void VoxelChunk::performSDF(SamplerFunction* sampler){
-	const ivec3 minBound = sampler->getMinBound();
-	const ivec3 maxBound = sampler->getMaxBound();
-	// todo: change the loop order.
-	for (int zi = minBound.z; zi <= maxBound.z; zi++){
-		for (int yi = minBound.y; yi <= maxBound.y; yi++){
-			for (int xi = minBound.x; xi <= maxBound.x; xi++){
-				ivec3 pos = ivec3(xi, yi, zi);
-				vec3 intersections;
-				VoxelData voxel;
+				// step 2, wind the quad above.
+				if (y < UsableRange - 1)// we need to skip the last quad.
+				{
+					edgeCellIndex = edgeDesc->calcIndex(z * 2, y * 2 + 2); // ifs
+					zmin = edgeDesc->seamEdges[edgeCellIndex * 2];
 
-				voxel.material = sampler->materialFunc(pos, 1, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
-				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
-				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
-				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
+					toIdx = edgeDesc->calcIndex(z * 2, y * 2 + 1);
+					ind1 = edgeDesc->indexMap[toIdx];
+					toIdx = edgeDesc->calcIndex(z * 2, y * 2 + 2);
+					ind2 = edgeDesc->indexMap[toIdx];
+					int ind3 = readVertexIndex(UsableRange - 1, y + 1, z);
 
-				writeRaw(xi, yi, zi, voxel);
-			}
-		}
-	}
-}
-void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
-	ivec3 minBound = ivec3(x, y, z);
-	int step = 1 << (w);
-	for (int zi = 0; zi < VoxelChunk::DataRange; zi++){
-		for (int yi = 0; yi < VoxelChunk::DataRange; yi++){
-			for (int xi = 0; xi < VoxelChunk::DataRange; xi++){
-				ivec3 pos = minBound + ivec3(xi, yi, zi) * step;
-				vec3 intersections;
-				VoxelData voxel;
-				if (xi == 1 && yi == 1 && zi == 1){
-					int sdf = 0;
+					// this time we need to wind 2 triangles, or a quad.
+					if (zmin == 0){
+						tempIndices.push_back(ind0);
+						tempIndices.push_back(ind1);
+						tempIndices.push_back(ind3);
+
+						tempIndices.push_back(ind3);
+						tempIndices.push_back(ind1);
+						tempIndices.push_back(ind2);
+					}
+					else if (zmin == 1){
+						tempIndices.push_back(ind0);
+						tempIndices.push_back(ind3);
+						tempIndices.push_back(ind1);
+
+						tempIndices.push_back(ind3);
+						tempIndices.push_back(ind2);
+						tempIndices.push_back(ind1);
+
+					}
 				}
-
-				voxel.material = sampler->materialFunc(pos, step, &intersections, &voxel.normal[0], &voxel.normal[1], &voxel.normal[2]);
-				if (voxel.material != 0){
-					int sdf = 0;
-				}
-				voxel.intersections[0] = (unsigned char)(intersections.x * EDGE_SCALE);
-				voxel.intersections[1] = (unsigned char)(intersections.y * EDGE_SCALE);
-				voxel.intersections[2] = (unsigned char)(intersections.z * EDGE_SCALE);
-
-				writeRaw(xi, yi, zi, voxel);
+				//int ymin = edgeDesc->seamEdges[edgeCellIndex * 2 + 1];
 			}
 		}
+		// deal with the last quad that was previously skipped.
+		// y+, xz plane
+		VoxelChunkEdgeDesc* edgeDescSupportZ = &edgeDescs[1];
+		VoxelChunkEdgeDesc* edgeDescHingeZ = &edgeDescs[5];
+		for (int z = 0; z < UsableRange; z++){
+			int edgeCellIndex = edgeDescHingeZ->calcIndex(z * 2, 0); // ifs
+			char zmin = edgeDescHingeZ->seamEdges[edgeCellIndex * 2];
+
+			int ind0 = readVertexIndex(UsableRange - 1, UsableRange - 1, z);  // ifs
+
+			int toIdx = edgeDesc->calcIndex(z * 2, UsableRange * 2 - 1); // ifs
+			int ind1 = edgeDesc->indexMap[toIdx];
+
+			toIdx = edgeDescSupportZ->calcIndex(UsableRange * 2 - 1, z * 2);
+			int ind2 = edgeDescSupportZ->indexMap[toIdx];
+
+			toIdx = edgeDescHingeZ->calcIndex(z * 2, 0);
+			int ind3 = edgeDescHingeZ->indexMap[toIdx];
+
+			// this time we need to wind 2 triangles, or a quad.
+			if (zmin == 0){
+				tempIndices.push_back(ind0);
+				tempIndices.push_back(ind1);
+				tempIndices.push_back(ind3);
+
+				tempIndices.push_back(ind3);
+				tempIndices.push_back(ind2);
+				tempIndices.push_back(ind0);
+			}
+			else if (zmin == 1){
+				tempIndices.push_back(ind0);
+				tempIndices.push_back(ind3);
+				tempIndices.push_back(ind1);
+
+				tempIndices.push_back(ind3);
+				tempIndices.push_back(ind0);
+				tempIndices.push_back(ind2);
+
+			}
+		}
+
+		//
+		VoxelChunkEdgeDesc* edgeDescSupportY = &edgeDescs[2];
+		VoxelChunkEdgeDesc* edgeDescHingeY = &edgeDescs[4];
 	}
 }
-void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
-	int idx = calcDataIndex(x, y, z);
-	if (_data == nullptr)createDataArray();
-	//_data[idx] = vData;
 
-	_data[idx].intersections[0] = vData.intersections[0];
-	_data[idx].intersections[1] = vData.intersections[1];
-	_data[idx].intersections[2] = vData.intersections[2];
-
-	_data[idx].material = vData.material;
-
-	_data[idx].normal[0] = vData.normal[0];
-	_data[idx].normal[1] = vData.normal[1];
-	_data[idx].normal[2] = vData.normal[2];
-
-}
-void VoxelChunk::setAdjacentLod(int faceId, int alod){
-	edgeDescs[faceId].init(faceId, alod);
-}
 // adjChunk should be at the negative side of *this chunk.
 void VoxelChunk::createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod){
 	// this value should be derived from the positions and lod values of the two chunks.
@@ -363,12 +446,216 @@ void VoxelChunk::createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int
 				// first z then y.
 				edgeDesc->seamEdges[toIdx * 2] = edgeMap[fromIdx * 3 + 2];
 				edgeDesc->seamEdges[toIdx * 2 + 1] = edgeMap[fromIdx * 3 + 1];
-				printf_s("%d %d\n", edgeMap[fromIdx * 3 + 2], edgeMap[fromIdx * 3 + 1]);
-
 			}
-
 		}
-
 	}
-	
+}
+// a generalized version
+void VoxelChunk::createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing){
+	// this value should be derived from the positions and lod values of the two chunks.
+	const int mapping[6] = {2, 1, 0, 2, 0, 1};
+	VoxelChunkEdgeDesc* edgeDesc;
+	edgeDesc = &(adjChunk->edgeDescs[facing]);
+	if (edgeDesc->lodDiff == -1){
+		edgeDesc->init(thisLod, adjLod);
+	}
+
+	vec3 vertTranslate;
+	if (facing == 0){
+		vertTranslate.x = UsableRange;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+	}
+	else if (facing == 1){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = UsableRange;
+		vertTranslate.z = (float)(loc1 * UsableRange) * 0.5f;
+	}
+	else if (facing == 2){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = UsableRange;
+	}
+
+	int vertIncre = adjChunk->tempVertices.size();
+
+	for (int c1 = 0; c1 < UsableRange; c1++){
+		for (int c0 = 0; c0 < UsableRange; c0++){
+			int usableIndex = 0;
+			if(facing == 0)usableIndex = calcUsableIndex(0, c1, c0);
+			else if (facing == 1)usableIndex = calcUsableIndex(c0, 0, c1);
+			else if (facing == 2)usableIndex = calcUsableIndex(c0, c1, 0);
+			int vidx = indexMap[usableIndex];
+			if (vidx == -1)continue;
+			// first we get the vertex from this chunk's vertex list.
+			vec3 vert = tempVertices[vidx];
+			// transform this vertex with respect to the two lod values.
+			vert *= edgeDesc->vertScale;
+			vert += vertTranslate;
+			// copy the vertex to adjChunk's vertex array,(and the normal too)
+			adjChunk->tempVertices.push_back(vert);
+			vec3 normal = tempNormals[vidx];
+			adjChunk->tempNormals.push_back(normal);
+			// then store the index in the edge desc structure.
+			int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, c1 + loc1 * UsableRange);
+			edgeDesc->indexMap[idx] = vertIncre;
+			vertIncre++;
+
+			// now we copy the edge flags.
+			// first x then z.
+			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
+			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
+		}
+	}
+}
+// to generate the 1D seam edge desc, we need to specify which of the three seams
+// we define 3 being the edge that's parallel to the x axis, and so on.
+
+void VoxelChunk::createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing){
+	// this value should be derived from the positions and lod values of the two chunks.
+	const int mapping[3] = { 0, 1, 2};
+	VoxelChunkEdgeDesc* edgeDesc;
+	edgeDesc = &(adjChunk->edgeDescs[facing]);
+	if (edgeDesc->lodDiff == -1){
+		edgeDesc->init(thisLod, adjLod);
+	}
+
+	vec3 vertTranslate;
+	if (facing == 3){
+		
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = UsableRange;
+		vertTranslate.z = UsableRange;
+	}
+	else if (facing == 4){
+		vertTranslate.x = UsableRange;
+		vertTranslate.y = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.z = UsableRange;
+	}
+	else if (facing == 5){
+		vertTranslate.x = UsableRange;
+		vertTranslate.y = UsableRange;
+		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+	}
+
+	int vertIncre = adjChunk->tempVertices.size();
+
+	for (int c0 = 0; c0 < UsableRange; c0++){
+		int usableIndex = 0;
+		if (facing == 3)usableIndex = calcUsableIndex(c0, 0, 0);
+		else if (facing == 4)usableIndex = calcUsableIndex(0, c0, 0);
+		else if (facing == 5)usableIndex = calcUsableIndex(0, 0, c0);
+		int vidx = indexMap[usableIndex];
+		if (vidx == -1)continue;
+		// first we get the vertex from this chunk's vertex list.
+		vec3 vert = tempVertices[vidx];
+		// transform this vertex with respect to the two lod values.
+		vert *= edgeDesc->vertScale;
+		vert += vertTranslate;
+		// copy the vertex to adjChunk's vertex array,(and the normal too)
+		adjChunk->tempVertices.push_back(vert);
+		vec3 normal = tempNormals[vidx];
+		adjChunk->tempNormals.push_back(normal);
+		// then store the index in the edge desc structure.
+		int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, 0);
+		edgeDesc->indexMap[idx] = vertIncre;
+		vertIncre++;
+
+		// now we copy the edge flags.
+		edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing - 3]];
+	}
+}
+void VoxelChunk::createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod){
+	// this value should be derived from the positions and lod values of the two chunks.
+	VoxelChunkEdgeDesc* edgeDesc;
+	edgeDesc = &(adjChunk->edgeDescs[6]);
+	if (edgeDesc->lodDiff == -1){
+		edgeDesc->init(thisLod, adjLod);
+	}
+
+	vec3 vertTranslate;
+	vertTranslate.x = UsableRange;
+	vertTranslate.y = UsableRange;
+	vertTranslate.z = UsableRange;
+
+	int vertIncre = adjChunk->tempVertices.size();
+
+	int usableIndex = 0;
+	usableIndex = calcUsableIndex(0, 0, 0);
+	int vidx = indexMap[usableIndex];
+	if (vidx == -1)return;
+	// first we get the vertex from this chunk's vertex list.
+	vec3 vert = tempVertices[vidx];
+	// transform this vertex with respect to the two lod values.
+	vert *= edgeDesc->vertScale;
+	vert += vertTranslate;
+	// copy the vertex to adjChunk's vertex array,(and the normal too)
+	adjChunk->tempVertices.push_back(vert);
+	vec3 normal = tempNormals[vidx];
+	adjChunk->tempNormals.push_back(normal);
+	// then store the index in the edge desc structure.
+	int idx = edgeDesc->calcIndex(0, 0);
+	edgeDesc->indexMap[idx] = vertIncre;
+	vertIncre++;
+
+	// since we dont really need the edge information here, we dont copy the flag.
+	//edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing]];
+}
+
+void VoxelChunk::createEdgeDesc2D_Reversed(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing){
+	// this value should be derived from the positions and lod values of the two chunks.
+	const int mapping[6] = { 2, 1, 0, 2, 0, 1 };
+	VoxelChunkEdgeDesc* edgeDesc;
+	edgeDesc = &(adjChunk->edgeDescs[facing]);
+	if (edgeDesc->lodDiff == -1){
+		edgeDesc->init(thisLod, adjLod);
+	}
+
+	vec3 vertTranslate;
+	if (facing == 0){
+		vertTranslate.x = UsableRange;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+	}
+	else if (facing == 1){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = UsableRange;
+		vertTranslate.z = (float)(loc1 * UsableRange) * 0.5f;
+	}
+	else if (facing == 2){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = UsableRange;
+	}
+
+	int vertIncre = adjChunk->tempVertices.size();
+
+	for (int c1 = 0; c1 < UsableRange; c1++){
+		for (int c0 = 0; c0 < UsableRange; c0++){
+			int usableIndex = 0;
+			if (facing == 0)usableIndex = calcUsableIndex(0, c1, c0);
+			else if (facing == 1)usableIndex = calcUsableIndex(c0, 0, c1);
+			else if (facing == 2)usableIndex = calcUsableIndex(c0, c1, 0);
+			int vidx = indexMap[usableIndex];
+			if (vidx == -1)continue;
+			// first we get the vertex from this chunk's vertex list.
+			vec3 vert = tempVertices[vidx];
+			// transform this vertex with respect to the two lod values.
+			vert *= edgeDesc->vertScale;
+			vert += vertTranslate;
+			// copy the vertex to adjChunk's vertex array,(and the normal too)
+			adjChunk->tempVertices.push_back(vert);
+			vec3 normal = tempNormals[vidx];
+			adjChunk->tempNormals.push_back(normal);
+			// then store the index in the edge desc structure.
+			int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, c1 + loc1 * UsableRange);
+			edgeDesc->indexMap[idx] = vertIncre;
+			vertIncre++;
+
+			// now we copy the edge flags.
+			// first x then z.
+			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
+			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
+		}
+	}
 }

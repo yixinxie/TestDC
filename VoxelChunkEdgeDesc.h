@@ -30,7 +30,6 @@ public:
 	~VoxelChunkEdgeDesc();
 
 	void init(int thisLod, int adjLod);
-	
 	inline int calcIndex(int x, int y){
 		return x + y * dimInCells;
 	}

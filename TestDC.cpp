@@ -51,13 +51,26 @@ void main(void){
 		vm.customSDF(0, 0, 0, 1, &sampler);
 		vm.customSDF(4, 0, 0, 0, &sampler);
 		vm.customSDF(4, 2, 0, 0, &sampler);
-//		vm.customSDF(-4, 4, 0, 2, &sampler);
+
+		vm.customSDF(4, 4, 0, 0, &sampler);
+		vm.customSDF(0, 4, 0, 0, &sampler);
+		vm.customSDF(2, 4, 0, 0, &sampler);
+		//vm.customSDF(-4, 4, 0, 2, &sampler);
 		vm.generateVertices();
+		VoxelChunk* left = vm.readChunk(0, 0, 0, 1); // base chunk
+
 		VoxelChunk* topRight = vm.readChunk(4, 2, 0, 0);
 		VoxelChunk* bottomRight = vm.readChunk(4, 0, 0, 0);
-		VoxelChunk* left = vm.readChunk(0, 0, 0, 1);
-		topRight->createEdgeDesc(0, left, 0, 1, 1);
-		bottomRight->createEdgeDesc(0, left, 0, 0, 1);
+		VoxelChunk* hinge = vm.readChunk(4, 4, 0, 0);
+		VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
+		VoxelChunk* rightTop = vm.readChunk(2, 4, 0, 0);
+		
+		topRight->createEdgeDesc2D(0, left, 0, 1, 1, 0);
+		bottomRight->createEdgeDesc2D(0, left, 0, 0, 1, 0);
+		hinge->createEdgeDesc1D(0, left, 0, 1, 5);
+
+		leftTop->createEdgeDesc2D(0, left, 0, 0, 1, 1);
+		rightTop->createEdgeDesc2D(0, left, 1, 0, 1, 1);
 
 		vm.generateIndices();
 		vm.exportJson();

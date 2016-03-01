@@ -22,9 +22,12 @@ public:
 	
 private:
 	VoxelData* _data;
+
+	// tables required in the vertex generation.
 	int indexMap[UsableRange * UsableRange * UsableRange];
 	// this can be optimized to use only 3 * 3 * UsableRange ^ 2 chars.
 	char edgeMap[UsableRange * UsableRange * UsableRange * 3];
+	VoxelChunkEdgeDesc edgeDescs[7];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
@@ -70,7 +73,8 @@ private:
 			accumNormal += _vdat->normal[2];
 		}
 	}
-	VoxelChunkEdgeDesc edgeDescs[7];
+	void generateEdgeTriangles(int facing);
+	
 public:
 	VoxelChunk(void);
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
@@ -89,4 +93,9 @@ public:
 	void setAdjacentLod(int faceId, int alod);
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 	void createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod);
+	void createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
+	void createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing);
+	void createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod);
+
+	void createEdgeDesc2D_Reversed(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
 };

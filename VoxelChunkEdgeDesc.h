@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <glm/glm.hpp>
+
 using namespace glm;
 /*
 this class contains the data that describe how a chunk should generate vertices
@@ -24,13 +25,33 @@ public:
 	1: on the same lod;
 	2: the neighbouring chunk has more details, covers 0.5x volume.
 	*/
+	inline int calcIndex(int x, int y){
+		return x + y * dimInCells;
+	}
+	inline char getEdgeFlagA(int x, int y){
+		int edgeCellIndex = calcIndex(x, y);
+		return seamEdges[edgeCellIndex * 2];
+	}
+	inline char getEdgeFlagB(int x, int y){
+		int edgeCellIndex = calcIndex(x, y);
+		return seamEdges[edgeCellIndex * 2 + 1];
+	}
+	inline char getVertexIndex(int x, int y){
+		int edgeCellIndex = calcIndex(x, y);
+		return indexMap[edgeCellIndex];
+	}
+	inline int getDim(void){ return dimInCells; }
+
 	float vertScale;
 	int lodDiff;
 	VoxelChunkEdgeDesc(void);
 	~VoxelChunkEdgeDesc();
 
 	void init(int thisLod, int adjLod);
-	inline int calcIndex(int x, int y){
-		return x + y * dimInCells;
-	}
+
+	void gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
+	void gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
+
+	void gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
+	void gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
 };

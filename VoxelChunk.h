@@ -9,7 +9,6 @@
 
 using namespace glm;
 using namespace svd;
-
 class VoxelChunk{
 public:
 	static const int UsableRangeShift = 1; // # of bit shift
@@ -46,6 +45,7 @@ private:
 	inline int readVertexIndex(const int x, const int y, const int z){
 		return indexMap[calcUsableIndex(x, y, z)];
 	}
+	
 	inline void solverAddX(unsigned char baseMat, const VoxelData* _vdat, QefSolver& solver, int& intersectionCount, vec3& accumNormal, float _x, float _y, float _z){
 		if (_vdat->material != baseMat){
 			solver.add(
@@ -73,9 +73,15 @@ private:
 			accumNormal += _vdat->normal[2];
 		}
 	}
-	void generateEdgeTriangles(int facing);
+	
+	void generateEdge1D(int facing);
+
+	void gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim);
+	void gen2DY(VoxelChunkEdgeDesc* edgeDesc, int dim);
+	void gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim);
 	
 public:
+
 	VoxelChunk(void);
 	~VoxelChunk(){ if (_data != nullptr) delete _data; };
 	void performSDF(SamplerFunction* sf);
@@ -86,6 +92,7 @@ public:
 	inline const std::vector<vec3>& getVertices(void){ return tempVertices; };
 	inline const std::vector<unsigned int>& getIndices(void){ return tempIndices; };
 	inline const std::vector<vec3>& getNormals(void){ return tempNormals; };
+	
 	void writeRaw(int x, int y, int z, const VoxelData& vData);
 	
 	// experimental
@@ -96,6 +103,4 @@ public:
 	void createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
 	void createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing);
 	void createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod);
-
-	void createEdgeDesc2D_Reversed(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
 };

@@ -7,6 +7,7 @@
 #include "HeightMapSampler.h"
 #include "DCT.h"
 #include "DCT3D.h"
+#include "Orihsay/misc/Timer.h"
 using namespace svd;
 void main(void){
 	if (false){
@@ -35,7 +36,7 @@ void main(void){
 	
 	if(true){
 		SF_Box sampler;// = new SF_Box();
-		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(7, 7, 7));
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 5.5f, 5.5f));
 		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
 
@@ -49,30 +50,103 @@ void main(void){
 
 		//vm.performSDF(sampler);
 		vm.customSDF(0, 0, 0, 1, &sampler);
+		// x+
 		vm.customSDF(4, 0, 0, 0, &sampler);
 		vm.customSDF(4, 2, 0, 0, &sampler);
-
+		vm.customSDF(4, 0, 2, 0, &sampler);
+		vm.customSDF(4, 2, 2, 0, &sampler);
+		// hinge Z
 		vm.customSDF(4, 4, 0, 0, &sampler);
+		vm.customSDF(4, 4, 2, 0, &sampler);
+		// y+
 		vm.customSDF(0, 4, 0, 0, &sampler);
 		vm.customSDF(2, 4, 0, 0, &sampler);
-		//vm.customSDF(-4, 4, 0, 2, &sampler);
+		vm.customSDF(0, 4, 2, 0, &sampler);
+		vm.customSDF(2, 4, 2, 0, &sampler);
+		// hinge X
+		vm.customSDF(0, 4, 4, 0, &sampler);
+		vm.customSDF(2, 4, 4, 0, &sampler);
+		// z+
+		vm.customSDF(0, 0, 4, 0, &sampler);
+		vm.customSDF(2, 0, 4, 0, &sampler);
+		vm.customSDF(0, 2, 4, 0, &sampler);
+		vm.customSDF(2, 2, 4, 0, &sampler);
+		// hinge Y
+		vm.customSDF(4, 0, 4, 0, &sampler);
+		vm.customSDF(4, 2, 4, 0, &sampler);
+		ori::Timer t;
 		vm.generateVertices();
-		VoxelChunk* left = vm.readChunk(0, 0, 0, 1); // base chunk
+		
+		VoxelChunk* base = vm.readChunk(0, 0, 0, 1); // base chunk
 
-		VoxelChunk* topRight = vm.readChunk(4, 2, 0, 0);
-		VoxelChunk* bottomRight = vm.readChunk(4, 0, 0, 0);
-		VoxelChunk* hinge = vm.readChunk(4, 4, 0, 0);
-		VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
+		VoxelChunk* chunk0; 
+		VoxelChunk* chunk1;
+		VoxelChunk* chunk2;
+		VoxelChunk* chunk3;
+		{
+			chunk0 = vm.readChunk(4, 0, 0, 0);
+			chunk1 = vm.readChunk(4, 0, 2, 0);
+			chunk2 = vm.readChunk(4, 2, 0, 0);
+			chunk3 = vm.readChunk(4, 2, 2, 0);
+			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 0);
+			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 0);
+			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 0);
+			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 0);
+		}
+		{
+			chunk0 = vm.readChunk(0, 4, 0, 0);
+			chunk1 = vm.readChunk(2, 4, 0, 0);
+			chunk2 = vm.readChunk(0, 4, 2, 0);
+			chunk3 = vm.readChunk(2, 4, 2, 0);
+			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 1);
+			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 1);
+			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 1);
+			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 1);
+		}
+		{
+			chunk0 = vm.readChunk(0, 0, 4, 0);
+			chunk1 = vm.readChunk(2, 0, 4, 0);
+			chunk2 = vm.readChunk(0, 2, 4, 0);
+			chunk3 = vm.readChunk(2, 2, 4, 0);
+			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 2);
+			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 2);
+			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 2);
+			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 2);
+		}
+		// hinges
+		{
+			chunk0 = vm.readChunk(4, 4, 0, 0);
+			chunk1 = vm.readChunk(4, 4, 2, 0);
+			chunk0->createEdgeDesc1D(0, base, 0, 1, 5);
+			chunk1->createEdgeDesc1D(0, base, 1, 1, 5);
+		}
+		{
+			chunk0 = vm.readChunk(0, 4, 4, 0);
+			chunk1 = vm.readChunk(2, 4, 4, 0);
+			chunk0->createEdgeDesc1D(0, base, 0, 1, 3);
+			chunk1->createEdgeDesc1D(0, base, 1, 1, 3);
+		}
+		{
+			chunk0 = vm.readChunk(4, 0, 4, 0);
+			chunk1 = vm.readChunk(4, 2, 4, 0);
+			chunk0->createEdgeDesc1D(0, base, 0, 1, 4);
+			chunk1->createEdgeDesc1D(0, base, 1, 1, 4);
+		}
+
+		/*VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
 		VoxelChunk* rightTop = vm.readChunk(2, 4, 0, 0);
 		
-		topRight->createEdgeDesc2D(0, left, 0, 1, 1, 0);
-		bottomRight->createEdgeDesc2D(0, left, 0, 0, 1, 0);
-		hinge->createEdgeDesc1D(0, left, 0, 1, 5);
+		VoxelChunk* hinge = vm.readChunk(4, 4, 0, 0);
 
-		leftTop->createEdgeDesc2D(0, left, 0, 0, 1, 1);
-		rightTop->createEdgeDesc2D(0, left, 1, 0, 1, 1);
+		topRight->createEdgeDesc2D(0, base, 0, 1, 1, 0);
+		bottomRight->createEdgeDesc2D(0, base, 0, 0, 1, 0);
+		hinge->createEdgeDesc1D(0, base, 0, 1, 5);
+
+		leftTop->createEdgeDesc2D(0, base, 0, 0, 1, 1);
+		rightTop->createEdgeDesc2D(0, base, 1, 0, 1, 1);*/
 
 		vm.generateIndices();
+		long timeTaken = t.mark();
 		vm.exportJson();
 		//delete heightmapSampler;
 	}

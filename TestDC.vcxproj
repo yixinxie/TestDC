@@ -83,6 +83,7 @@
     <ClCompile Include="..\lodepng\lodepng.cpp" />
     <ClCompile Include="..\lodepng\lodepng_util.cpp" />
     <ClCompile Include="..\Orihsay\misc\CharHelper.cpp" />
+    <ClCompile Include="..\Orihsay\misc\Timer.cpp" />
     <ClCompile Include="DCT.cpp" />
     <ClCompile Include="DCT3D.cpp" />
     <ClCompile Include="HeightMapSampler.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="..\lodepng\lodepng.h" />
     <ClInclude Include="..\lodepng\lodepng_util.h" />
     <ClInclude Include="..\Orihsay\misc\CharHelper.h" />
+    <ClInclude Include="..\Orihsay\misc\Timer.h" />
     <ClInclude Include="DCT.h" />
     <ClInclude Include="DCT3D.h" />
     <ClInclude Include="HeightMapSampler.h" />

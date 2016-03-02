@@ -72,6 +72,9 @@
     <ClCompile Include="VoxelChunkEdgeDesc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Orihsay\misc\Timer.cpp">
+      <Filter>Source Files\external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -121,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="VoxelChunkEdgeDesc.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Orihsay\misc\Timer.h">
+      <Filter>Source Files\external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

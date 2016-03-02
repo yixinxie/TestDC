@@ -99,7 +99,6 @@ public:
 	
 	void setAdjacentLod(int faceId, int alod);
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
-	void createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod);
 	void createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
 	void createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing);
 	void createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod);

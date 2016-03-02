@@ -141,11 +141,9 @@ void VoxelChunk::generateVertices(){
 				if (baseMat == 0 && eight[4]->material != 0)zmin = 1;
 				else if (baseMat != 0 && eight[4]->material == 0)zmin = 0;
 
-
 				edgeMap[usableIndex * 3] = xmin;
 				edgeMap[usableIndex * 3 + 1] = ymin;
 				edgeMap[usableIndex * 3 + 2] = zmin;
-
 
 				// step 3 : add the intersections and their normals to the solver, up to 12 intersections/edges.
 				// at the same time, increment the intersection count and normal accumulation.
@@ -449,55 +447,6 @@ void VoxelChunk::generateEdge1D(int facing){
 }
 
 // adjChunk should be at the negative side of *this chunk.
-// non-generalized
-void VoxelChunk::createEdgeDesc(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod){
-	// this value should be derived from the positions and lod values of the two chunks.
-	int edgeDescIdx = 0; 
-	
-	VoxelChunkEdgeDesc* edgeDesc;
-	edgeDesc = &(adjChunk->edgeDescs[edgeDescIdx]);
-	if (edgeDesc->lodDiff == -1){
-		edgeDesc->init(thisLod, adjLod);
-	}
-
-	vec3 vertTranslate;
-	
-	// vertTranslate is dependent on the loc0 and loc1 values.
-	vertTranslate.x = UsableRange;
-	vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
-	vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
-
-	int vertIncre = adjChunk->tempVertices.size();
-	// first: go with the yz-plane
-	for (int y = 0; y < UsableRange; y++){
-		for (int z = 0; z < UsableRange; z++){
-			int vidx = readVertexIndex(0, y, z);
-			if (vidx == -1)continue;
-			// first we get the vertex from this chunk's vertex list.
-			vec3 vert = tempVertices[vidx];
-			// transform this vertex with respect to the two lod values.
-			vert *= edgeDesc->vertScale;
-			vert += vertTranslate;
-			// copy the vertex to adjChunk's vertex array,(and the normal too)
-			adjChunk->tempVertices.push_back(vert);
-			vec3 normal = tempNormals[vidx];
-			adjChunk->tempNormals.push_back(normal);
-			// then store the index in the edge desc structure.
-			int idx = edgeDesc->calcIndex(z + loc0 * UsableRange, y + loc1 * UsableRange);
-			edgeDesc->indexMap[idx] = vertIncre;
-
-			vertIncre++;
-			{
-				// now we copy the edge flags.
-				int fromIdx = calcUsableIndex(0, y, z);
-				int toIdx = edgeDesc->calcIndex(z + loc0 * UsableRange, y + loc1 * UsableRange);
-				// first z then y.
-				edgeDesc->seamEdges[toIdx * 2] = edgeMap[fromIdx * 3 + 2];
-				edgeDesc->seamEdges[toIdx * 2 + 1] = edgeMap[fromIdx * 3 + 1];
-			}
-		}
-	}
-}
 // a generalized version
 void VoxelChunk::createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing){
 	// this value should be derived from the positions and lod values of the two chunks.

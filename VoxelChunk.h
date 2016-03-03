@@ -79,6 +79,8 @@ private:
 	void gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim);
 	void gen2DY(VoxelChunkEdgeDesc* edgeDesc, int dim);
 	void gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim);
+
+	void gen2DUni(VoxelChunkEdgeDesc* edgeDesc, int dim);
 	
 public:
 
@@ -101,5 +103,6 @@ public:
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 	void createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing);
 	void createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing);
-	void createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod);
+
+	void createEdgeDesc2DUni(const int thisLod, const int loc0, const int loc1, VoxelChunk* adjChunk, const int adjLod, const int facing);
 };

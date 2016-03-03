@@ -83,15 +83,15 @@ void main(void){
 		VoxelChunk* chunk1;
 		VoxelChunk* chunk2;
 		VoxelChunk* chunk3;
-		{
+		/*{
 			chunk0 = vm.readChunk(4, 0, 0, 0);
 			chunk1 = vm.readChunk(4, 0, 2, 0);
 			chunk2 = vm.readChunk(4, 2, 0, 0);
 			chunk3 = vm.readChunk(4, 2, 2, 0);
-			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 0);
-			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 0);
-			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 0);
-			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 0);
+			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 0);
+			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 0);
+			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 0);
+			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 0);
 		}
 		{
 			chunk0 = vm.readChunk(0, 4, 0, 0);
@@ -131,22 +131,24 @@ void main(void){
 			chunk1 = vm.readChunk(4, 2, 4, 0);
 			chunk0->createEdgeDesc1D(0, base, 0, 1, 4);
 			chunk1->createEdgeDesc1D(0, base, 1, 1, 4);
-		}
+		}*/
 
-		/*VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
+		VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
 		VoxelChunk* rightTop = vm.readChunk(2, 4, 0, 0);
-		
 		VoxelChunk* hinge = vm.readChunk(4, 4, 0, 0);
+		VoxelChunk* topRight = vm.readChunk(4, 2, 0, 0);
+		VoxelChunk* bottomRight = vm.readChunk(4, 0, 0, 0);
 
-		topRight->createEdgeDesc2D(0, base, 0, 1, 1, 0);
-		bottomRight->createEdgeDesc2D(0, base, 0, 0, 1, 0);
+		bottomRight->createEdgeDesc2DUni(0, 0, 0, base, 1, 0);
+		topRight->createEdgeDesc2DUni(0, 0, 1, base, 1, 0);
 		hinge->createEdgeDesc1D(0, base, 0, 1, 5);
 
-		leftTop->createEdgeDesc2D(0, base, 0, 0, 1, 1);
-		rightTop->createEdgeDesc2D(0, base, 1, 0, 1, 1);*/
+		leftTop->createEdgeDesc2DUni(0, 0, 0, base, 1, 1);
+		rightTop->createEdgeDesc2DUni(0, 1, 0, base, 1, 1);
 
 		vm.generateIndices();
 		long timeTaken = t.mark();
+		printf_s("time elapsed: %d\n", timeTaken);
 		vm.exportJson();
 		//delete heightmapSampler;
 	}

@@ -19,6 +19,7 @@ public:
 	
 	int* indexMap;
 	char* seamEdges;
+	int* baseIndexMap;
 	/*
 	level of detail difference,
 	0: the neighbouring chunk has less details, covers 2x volume;
@@ -54,4 +55,7 @@ public:
 
 	void gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
 	void gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
+	// new experiment!
+	
+
 };

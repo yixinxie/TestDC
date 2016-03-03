@@ -1,9 +1,10 @@
 #include "VoxelChunkEdgeDesc.h"
 #include "VoxelChunk.h"
-VoxelChunkEdgeDesc::VoxelChunkEdgeDesc() : indexMap(nullptr), seamEdges(nullptr), lodDiff(-1){
+VoxelChunkEdgeDesc::VoxelChunkEdgeDesc() : indexMap(nullptr), baseIndexMap(nullptr), seamEdges(nullptr), lodDiff(-1){
 }
 VoxelChunkEdgeDesc::~VoxelChunkEdgeDesc(){
 	if(indexMap != nullptr)delete indexMap;
+	if (baseIndexMap != nullptr)delete baseIndexMap;
 	if (seamEdges != nullptr)delete seamEdges;
 }
 void VoxelChunkEdgeDesc::init(int thisLod, int adjLod){
@@ -32,7 +33,12 @@ void VoxelChunkEdgeDesc::init(int thisLod, int adjLod){
 		// if adjChunk covers more volume than this(less detailed),
 		// we want to make the indexMap twice as large as its original slice.
 		indexMap = new int[dimInCells * dimInCells];
-		memset(indexMap, 0, dimInCells * dimInCells * sizeof(int));
+		memset(indexMap, -1, dimInCells * dimInCells * sizeof(int));
+	}
+	if (baseIndexMap == nullptr){
+		// regardless of the lod relationship, the adjacent slice should always be of its original size.
+		baseIndexMap = new int[VoxelChunk::UsableRange * VoxelChunk::UsableRange];
+		memset(baseIndexMap, -1, VoxelChunk::UsableRange * VoxelChunk::UsableRange * sizeof(int));
 	}
 
 	const int flagNumPerCell = 2;

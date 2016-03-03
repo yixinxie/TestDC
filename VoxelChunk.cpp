@@ -106,9 +106,7 @@ void VoxelChunk::generateVertices(){
 	int vertexId = 0;
 	{
 		int indexMapLength = UsableRange * UsableRange * UsableRange;
-		for (int i = 0; i < indexMapLength; i++){
-			indexMap[i] = -1;
-		}
+		memset(indexMap, -1, sizeof(indexMap));
 	}
 	for (int z = 0; z < UsableRange; z++){
 		for (int y = 0; y < UsableRange; y++){
@@ -278,13 +276,17 @@ void VoxelChunk::generateIndices(){
 			}
 		}
 	}
-	gen2DX(&edgeDescs[0], edgeDescs[0].getDim());
+	/*gen2DX(&edgeDescs[0], edgeDescs[0].getDim());
 	gen2DY(&edgeDescs[1], edgeDescs[1].getDim());
-	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());
+	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());*/
 
-	generateEdge1D(0);
+	gen2DUni(&edgeDescs[0], edgeDescs[0].getDim());
+	gen2DUni(&edgeDescs[1], edgeDescs[1].getDim());
+	//gen2DUni(&edgeDescs[2], edgeDescs[2].getDim());
+
+	/*generateEdge1D(0);
 	generateEdge1D(1);
-	generateEdge1D(2);
+	generateEdge1D(2);*/
 }
 
 void VoxelChunk::gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim){
@@ -564,39 +566,115 @@ void VoxelChunk::createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, i
 		edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing - 3]];
 	}
 }
-void VoxelChunk::createEdgeDesc0D(int thisLod, VoxelChunk* adjChunk, int adjLod){
+
+void VoxelChunk::createEdgeDesc2DUni(int thisLod, int loc0, int loc1, VoxelChunk* adjChunk, int adjLod, int facing)
+{
 	// this value should be derived from the positions and lod values of the two chunks.
+	const int mapping[6] = { 2, 1, 0, 2, 0, 1 };
 	VoxelChunkEdgeDesc* edgeDesc;
-	edgeDesc = &(adjChunk->edgeDescs[6]);
+	edgeDesc = &(adjChunk->edgeDescs[facing]);
 	if (edgeDesc->lodDiff == -1){
 		edgeDesc->init(thisLod, adjLod);
+
+		// copy the original index from the adjacent chunk to the edge desc structure.
+		for (int c1 = 0; c1 < UsableRange; c1++){
+			for (int c0 = 0; c0 < UsableRange; c0++){
+				
+				int otherIdx = c0 + c1 * UsableRange;
+				int adjUsableIndex = 0;
+				if (facing == 0)adjUsableIndex = calcUsableIndex(UsableRange - 1, c1, c0);
+				else if (facing == 1)adjUsableIndex = calcUsableIndex(c0, UsableRange - 1, c1);
+				else if (facing == 2)adjUsableIndex = calcUsableIndex(c0, c1, UsableRange - 1);
+
+				edgeDesc->baseIndexMap[otherIdx] = adjChunk->indexMap[adjUsableIndex];
+			}
+		}
 	}
 
 	vec3 vertTranslate;
-	vertTranslate.x = UsableRange;
-	vertTranslate.y = UsableRange;
-	vertTranslate.z = UsableRange;
+	if (facing == 0){
+		vertTranslate.x = UsableRange;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+	}
+	else if (facing == 1){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = UsableRange;
+		vertTranslate.z = (float)(loc1 * UsableRange) * 0.5f;
+	}
+	else if (facing == 2){
+		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.z = UsableRange;
+	}
 
 	int vertIncre = adjChunk->tempVertices.size();
 
-	int usableIndex = 0;
-	usableIndex = calcUsableIndex(0, 0, 0);
-	int vidx = indexMap[usableIndex];
-	if (vidx == -1)return;
-	// first we get the vertex from this chunk's vertex list.
-	vec3 vert = tempVertices[vidx];
-	// transform this vertex with respect to the two lod values.
-	vert *= edgeDesc->vertScale;
-	vert += vertTranslate;
-	// copy the vertex to adjChunk's vertex array,(and the normal too)
-	adjChunk->tempVertices.push_back(vert);
-	vec3 normal = tempNormals[vidx];
-	adjChunk->tempNormals.push_back(normal);
-	// then store the index in the edge desc structure.
-	int idx = edgeDesc->calcIndex(0, 0);
-	edgeDesc->indexMap[idx] = vertIncre;
-	vertIncre++;
+	for (int c1 = 0; c1 < UsableRange; c1++){
+		for (int c0 = 0; c0 < UsableRange; c0++){
+			int usableIndex = 0;
+			if (facing == 0)usableIndex = calcUsableIndex(0, c1, c0);
+			else if (facing == 1)usableIndex = calcUsableIndex(c0, 0, c1);
+			else if (facing == 2)usableIndex = calcUsableIndex(c0, c1, 0);
 
-	// since we dont really need the edge information here, we dont copy the flag.
-	//edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing]];
+			int vidx = indexMap[usableIndex];
+			if (vidx == -1)continue;
+			// first we get the vertex from this chunk's vertex list.
+			vec3 vert = tempVertices[vidx];
+			// transform this vertex with respect to the two lod values.
+			vert *= edgeDesc->vertScale;
+			vert += vertTranslate;
+			// step 1: copy the vertex to adjChunk's vertex array,(and the normal too)
+			adjChunk->tempVertices.push_back(vert);
+			vec3 normal = tempNormals[vidx];
+			adjChunk->tempNormals.push_back(normal);
+			// step 2: then store the index in the edge desc structure.
+			int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, c1 + loc1 * UsableRange);
+			edgeDesc->indexMap[idx] = vertIncre;
+			vertIncre++;
+			
+			// now we copy the edge flags.
+			// first x then z.
+			if (c1 == 0 && c0 == 0){
+				int sdf = 0;
+			}
+			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
+			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
+		}
+		
+	}
+
+}
+void VoxelChunk::gen2DUni(VoxelChunkEdgeDesc* edgeDesc, int dim){
+	for (int y = 1; y < dim; y++){
+		for (int x = 0; x < dim; x++){
+			int baseX = x >> 1, baseY = y >> 1;
+			// first read the vertex index from the original index table.
+			int ind0 = edgeDesc->baseIndexMap[baseX + baseY * UsableRange];
+			
+			if (y % 2 == 1){
+				edgeDesc->gen2D_x_tri(x, y, &tempIndices, ind0, false);
+			}
+			else{
+				int ind3 = edgeDesc->baseIndexMap[baseX + (baseY - 1) * UsableRange];
+				edgeDesc->gen2D_x_quad(x, y, &tempIndices, ind0, ind3, false);
+			}
+		}
+	}
+	//???
+	for (int y = 0; y < dim; y++){
+		for (int x = 1; x < dim; x++){
+			int baseX = x >> 1, baseY = y >> 1;
+			// first read the vertex index from the original index table.
+			int ind0 = edgeDesc->baseIndexMap[baseX + baseY * UsableRange];
+			
+			if (x % 2 == 1){
+				edgeDesc->gen2D_y_tri(x, y, &tempIndices, ind0, true);
+			}
+			else{
+				int ind3 = edgeDesc->baseIndexMap[baseX - 1 + (baseY)* UsableRange];
+				edgeDesc->gen2D_y_quad(x, y, &tempIndices, ind0, ind3, true);
+			}
+		}
+	}
 }

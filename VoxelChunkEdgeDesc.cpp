@@ -106,13 +106,13 @@ void VoxelChunkEdgeDesc::gen2D_y_tri(int x, int y, std::vector<unsigned int>* te
 	char cond1 = (inverted) ? 0 : 1;
 	if (edgeB == cond0){
 		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind2);
 		tempIndices->push_back(ind1);
+		tempIndices->push_back(ind2);
 	}
 	else if (edgeB == cond1){
 		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
 		tempIndices->push_back(ind2);
+		tempIndices->push_back(ind1);
 
 	}
 }
@@ -125,24 +125,24 @@ void VoxelChunkEdgeDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* t
 	char cond1 = (inverted) ? 0 : 1;
 	if (edgeB == cond0){
 		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind3);
 		tempIndices->push_back(ind1);
+		tempIndices->push_back(ind3);
 
 		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind2);
 		tempIndices->push_back(ind1);
+		tempIndices->push_back(ind2);
 	}
 	else if (edgeB == cond1){
 		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
 		tempIndices->push_back(ind3);
+		tempIndices->push_back(ind1);
 
 		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind1);
 		tempIndices->push_back(ind2);
+		tempIndices->push_back(ind1);
 	}
 }
-void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices){
+void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted){
 	for (int y = 1; y < dimInCells; y++){
 		for (int x = 0; x < dimInCells; x++){
 			int baseX = x >> 1, baseY = y >> 1;
@@ -150,11 +150,11 @@ void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices){
 			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
 
 			if (y % 2 == 1){
-				gen2D_x_tri(x, y, tempIndices, ind0, false);
+				gen2D_x_tri(x, y, tempIndices, ind0, inverted);
 			}
 			else{
 				int ind3 = baseIndexMap[baseX + (baseY - 1) * VoxelChunk::UsableRange];
-				gen2D_x_quad(x, y, tempIndices, ind0, ind3, false);
+				gen2D_x_quad(x, y, tempIndices, ind0, ind3, inverted);
 			}
 		}
 	}
@@ -162,15 +162,18 @@ void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices){
 	for (int y = 0; y < dimInCells; y++){
 		for (int x = 1; x < dimInCells; x++){
 			int baseX = x >> 1, baseY = y >> 1;
+			if (x == 1 && y == 3){
+				int sdf = 0;
+			}
 			// first read the vertex index from the original index table.
 			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
 
 			if (x % 2 == 1){
-				gen2D_y_tri(x, y, tempIndices, ind0, false);
+				gen2D_y_tri(x, y, tempIndices, ind0, inverted);
 			}
 			else{
 				int ind3 = baseIndexMap[baseX - 1 + (baseY) * VoxelChunk::UsableRange];
-				gen2D_y_quad(x, y, tempIndices, ind0, ind3, false);
+				gen2D_y_quad(x, y, tempIndices, ind0, ind3, inverted);
 			}
 		}
 	}

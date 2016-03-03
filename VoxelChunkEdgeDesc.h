@@ -56,6 +56,6 @@ public:
 	void gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
 	void gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
 	// new experiment!
-	void gen2DUni(std::vector<unsigned int>* tempIndices);
+	void gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted);
 
 };

@@ -36,7 +36,7 @@ void main(void){
 	
 	if(true){
 		SF_Box sampler;// = new SF_Box();
-		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 3.5f, 5.5f));
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 5.5f, 5.5f));
 		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
 
@@ -83,7 +83,7 @@ void main(void){
 		VoxelChunk* chunk1;
 		VoxelChunk* chunk2;
 		VoxelChunk* chunk3;
-		/*{
+		{
 			chunk0 = vm.readChunk(4, 0, 0, 0);
 			chunk1 = vm.readChunk(4, 0, 2, 0);
 			chunk2 = vm.readChunk(4, 2, 0, 0);
@@ -98,20 +98,20 @@ void main(void){
 			chunk1 = vm.readChunk(2, 4, 0, 0);
 			chunk2 = vm.readChunk(0, 4, 2, 0);
 			chunk3 = vm.readChunk(2, 4, 2, 0);
-			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 1);
-			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 1);
-			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 1);
-			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 1);
+			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 1);
+			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 1);
+			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 1);
+			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 1);
 		}
 		{
 			chunk0 = vm.readChunk(0, 0, 4, 0);
 			chunk1 = vm.readChunk(2, 0, 4, 0);
 			chunk2 = vm.readChunk(0, 2, 4, 0);
 			chunk3 = vm.readChunk(2, 2, 4, 0);
-			chunk0->createEdgeDesc2D(0, base, 0, 0, 1, 2);
-			chunk1->createEdgeDesc2D(0, base, 1, 0, 1, 2);
-			chunk2->createEdgeDesc2D(0, base, 0, 1, 1, 2);
-			chunk3->createEdgeDesc2D(0, base, 1, 1, 1, 2);
+			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 2);
+			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 2);
+			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 2);
+			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 2);
 		}
 		// hinges
 		{
@@ -131,9 +131,9 @@ void main(void){
 			chunk1 = vm.readChunk(4, 2, 4, 0);
 			chunk0->createEdgeDesc1D(0, base, 0, 1, 4);
 			chunk1->createEdgeDesc1D(0, base, 1, 1, 4);
-		}*/
+		}
 
-		VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
+		/*VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);
 		VoxelChunk* rightTop = vm.readChunk(2, 4, 0, 0);
 		VoxelChunk* hinge = vm.readChunk(4, 4, 0, 0);
 		VoxelChunk* topRight = vm.readChunk(4, 2, 0, 0);
@@ -144,7 +144,7 @@ void main(void){
 		hinge->createEdgeDesc1D(0, base, 0, 1, 5);
 
 		leftTop->createEdgeDesc2DUni(0, 0, 0, base, 1, 1);
-		rightTop->createEdgeDesc2DUni(0, 1, 0, base, 1, 1);
+		rightTop->createEdgeDesc2DUni(0, 1, 0, base, 1, 1);*/
 
 		vm.generateIndices();
 		long timeTaken = t.mark();

@@ -280,15 +280,16 @@ void VoxelChunk::generateIndices(){
 	gen2DY(&edgeDescs[1], edgeDescs[1].getDim());
 	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());*/
 
-	edgeDescs[0].gen2DUni(&tempIndices);
-	edgeDescs[1].gen2DUni(&tempIndices);
+	edgeDescs[0].gen2DUni(&tempIndices, false);
+	edgeDescs[1].gen2DUni(&tempIndices, false);
+	edgeDescs[2].gen2DUni(&tempIndices, true);
 	//gen2DUni(&edgeDescs[2], edgeDescs[2].getDim());
 
 	/*generateEdge1D(0);
 	generateEdge1D(1);
 	generateEdge1D(2);*/
 }
-
+/*
 void VoxelChunk::gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim){
 	for (int y = 1; y < dim; y++){
 		for (int z = 0; z < dim; z++){
@@ -379,7 +380,7 @@ void VoxelChunk::gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim){
 		}
 	}
 
-}
+}*/
 
 void VoxelChunk::generateEdge1D(int facing){
 	const int mapping[] = {
@@ -635,9 +636,6 @@ void VoxelChunk::createEdgeDesc2DUni(int thisLod, int loc0, int loc1, VoxelChunk
 			
 			// now we copy the edge flags.
 			// first x then z.
-			if (c1 == 0 && c0 == 0){
-				int sdf = 0;
-			}
 			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
 			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
 		}

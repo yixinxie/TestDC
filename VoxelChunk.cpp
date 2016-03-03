@@ -280,8 +280,8 @@ void VoxelChunk::generateIndices(){
 	gen2DY(&edgeDescs[1], edgeDescs[1].getDim());
 	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());*/
 
-	gen2DUni(&edgeDescs[0], edgeDescs[0].getDim());
-	gen2DUni(&edgeDescs[1], edgeDescs[1].getDim());
+	edgeDescs[0].gen2DUni(&tempIndices);
+	edgeDescs[1].gen2DUni(&tempIndices);
 	//gen2DUni(&edgeDescs[2], edgeDescs[2].getDim());
 
 	/*generateEdge1D(0);
@@ -644,37 +644,4 @@ void VoxelChunk::createEdgeDesc2DUni(int thisLod, int loc0, int loc1, VoxelChunk
 		
 	}
 
-}
-void VoxelChunk::gen2DUni(VoxelChunkEdgeDesc* edgeDesc, int dim){
-	for (int y = 1; y < dim; y++){
-		for (int x = 0; x < dim; x++){
-			int baseX = x >> 1, baseY = y >> 1;
-			// first read the vertex index from the original index table.
-			int ind0 = edgeDesc->baseIndexMap[baseX + baseY * UsableRange];
-			
-			if (y % 2 == 1){
-				edgeDesc->gen2D_x_tri(x, y, &tempIndices, ind0, false);
-			}
-			else{
-				int ind3 = edgeDesc->baseIndexMap[baseX + (baseY - 1) * UsableRange];
-				edgeDesc->gen2D_x_quad(x, y, &tempIndices, ind0, ind3, false);
-			}
-		}
-	}
-	//???
-	for (int y = 0; y < dim; y++){
-		for (int x = 1; x < dim; x++){
-			int baseX = x >> 1, baseY = y >> 1;
-			// first read the vertex index from the original index table.
-			int ind0 = edgeDesc->baseIndexMap[baseX + baseY * UsableRange];
-			
-			if (x % 2 == 1){
-				edgeDesc->gen2D_y_tri(x, y, &tempIndices, ind0, true);
-			}
-			else{
-				int ind3 = edgeDesc->baseIndexMap[baseX - 1 + (baseY)* UsableRange];
-				edgeDesc->gen2D_y_quad(x, y, &tempIndices, ind0, ind3, true);
-			}
-		}
-	}
 }

@@ -36,7 +36,7 @@ void main(void){
 	
 	if(true){
 		SF_Box sampler;// = new SF_Box();
-		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 5.5f, 5.5f));
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 3.5f, 5.5f));
 		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
 

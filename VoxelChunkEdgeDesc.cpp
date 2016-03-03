@@ -142,3 +142,36 @@ void VoxelChunkEdgeDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* t
 		tempIndices->push_back(ind2);
 	}
 }
+void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices){
+	for (int y = 1; y < dimInCells; y++){
+		for (int x = 0; x < dimInCells; x++){
+			int baseX = x >> 1, baseY = y >> 1;
+			// first read the vertex index from the original index table.
+			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
+
+			if (y % 2 == 1){
+				gen2D_x_tri(x, y, tempIndices, ind0, false);
+			}
+			else{
+				int ind3 = baseIndexMap[baseX + (baseY - 1) * VoxelChunk::UsableRange];
+				gen2D_x_quad(x, y, tempIndices, ind0, ind3, false);
+			}
+		}
+	}
+	//???
+	for (int y = 0; y < dimInCells; y++){
+		for (int x = 1; x < dimInCells; x++){
+			int baseX = x >> 1, baseY = y >> 1;
+			// first read the vertex index from the original index table.
+			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
+
+			if (x % 2 == 1){
+				gen2D_y_tri(x, y, tempIndices, ind0, false);
+			}
+			else{
+				int ind3 = baseIndexMap[baseX - 1 + (baseY) * VoxelChunk::UsableRange];
+				gen2D_y_quad(x, y, tempIndices, ind0, ind3, false);
+			}
+		}
+	}
+}

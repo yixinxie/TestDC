@@ -283,6 +283,8 @@ void VoxelChunk::generateIndices(){
 	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());
 
 	generateEdge1D(0);
+	generateEdge1D(1);
+	generateEdge1D(2);
 }
 
 void VoxelChunk::gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim){
@@ -353,10 +355,10 @@ void VoxelChunk::gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim){
 			int ind0 = readVertexIndex(baseX, baseY, VoxelChunk::UsableRange - 1);
 			int ind3 = readVertexIndex(baseX, baseY - 1, VoxelChunk::UsableRange - 1);
 			if (y % 2 == 1){
-				edgeDesc->gen2D_x_tri(x, y, &tempIndices, ind0, false);
+				edgeDesc->gen2D_x_tri(x, y, &tempIndices, ind0, true);
 			}
 			else{
-				edgeDesc->gen2D_x_quad(x, y, &tempIndices, ind0, ind3, false);
+				edgeDesc->gen2D_x_quad(x, y, &tempIndices, ind0, ind3, true);
 			}
 		}
 	}
@@ -367,10 +369,10 @@ void VoxelChunk::gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim){
 			int ind0 = readVertexIndex(baseX, baseY, VoxelChunk::UsableRange - 1);
 			int ind3 = readVertexIndex(baseX - 1, baseY, VoxelChunk::UsableRange - 1);
 			if (x % 2 == 1){
-				edgeDesc->gen2D_y_tri(x, y, &tempIndices, ind0, false);
+				edgeDesc->gen2D_y_tri(x, y, &tempIndices, ind0, true);
 			}
 			else{
-				edgeDesc->gen2D_y_quad(x, y, &tempIndices, ind0, ind3, false);
+				edgeDesc->gen2D_y_quad(x, y, &tempIndices, ind0, ind3, true);
 			}
 		}
 	}

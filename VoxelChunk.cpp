@@ -289,98 +289,6 @@ void VoxelChunk::generateIndices(){
 	generateEdge1D(1);
 	generateEdge1D(2);*/
 }
-/*
-void VoxelChunk::gen2DX(VoxelChunkEdgeDesc* edgeDesc, int dim){
-	for (int y = 1; y < dim; y++){
-		for (int z = 0; z < dim; z++){
-			int baseZ = z >> 1, baseY = y >> 1;
-			// first read the vertex index from the original index table.
-			int ind0 = readVertexIndex(VoxelChunk::UsableRange - 1, baseY, baseZ);  // ifs
-			int ind3 = readVertexIndex(VoxelChunk::UsableRange - 1, baseY - 1, baseZ);  // ifs
-			if (y % 2 == 1){
-				edgeDesc->gen2D_x_tri(z, y, &tempIndices, ind0, false);
-			}
-			else{
-				edgeDesc->gen2D_x_quad(z, y, &tempIndices, ind0, ind3, false);
-			}
-		}
-	}
-	//???
-	for (int y = 0; y < dim; y++){
-		for (int z = 1; z < dim; z++){
-			int baseZ = z >> 1, baseY = y >> 1;
-			// first read the vertex index from the original index table.
-			int ind0 = readVertexIndex(VoxelChunk::UsableRange - 1, baseY, baseZ);  // ifs
-			int ind3 = readVertexIndex(VoxelChunk::UsableRange - 1, baseY, baseZ - 1);  // ifs
-			if (z % 2 == 1){
-				edgeDesc->gen2D_y_tri(z, y, &tempIndices, ind0, false);
-			}
-			else{
-				edgeDesc->gen2D_y_quad(z, y, &tempIndices, ind0, ind3, false);
-			}
-		}
-	}
-}
-void VoxelChunk::gen2DY(VoxelChunkEdgeDesc* edgeDesc, int dim){
-	for (int z = 1; z < dim; z++){
-		for (int x = 0; x < dim; x++){
-			int baseX = x >> 1, baseZ = z >> 1;
-			int ind0 = readVertexIndex(baseX, VoxelChunk::UsableRange - 1, baseZ);
-			int ind3 = readVertexIndex(baseX, VoxelChunk::UsableRange - 1, baseZ - 1);
-			if (z % 2 == 1){
-				edgeDesc->gen2D_x_tri(x, z, &tempIndices, ind0, false);
-			}
-			else{
-				edgeDesc->gen2D_x_quad(x, z, &tempIndices, ind0, ind3, false);
-			}
-		}
-	}
-	for (int z = 0; z < dim; z++){
-		for (int x = 1; x < dim; x++){
-			int baseX = x >> 1, baseZ = z >> 1;
-			int ind0 = readVertexIndex(baseX, VoxelChunk::UsableRange - 1, baseZ);
-			int ind3 = readVertexIndex(baseX - 1, VoxelChunk::UsableRange - 1, baseZ);
-			if (x % 2 == 1){
-				edgeDesc->gen2D_y_tri(x, z, &tempIndices, ind0, true);
-			}
-			else{
-				edgeDesc->gen2D_y_quad(x, z, &tempIndices, ind0, ind3, true);
-			}
-		}
-	}
-
-}
-void VoxelChunk::gen2DZ(VoxelChunkEdgeDesc* edgeDesc, int dim){
-	//???
-	for (int y = 1; y < dim; y++){
-		for (int x = 0; x < dim; x++){
-			int baseX = x >> 1, baseY = y >> 1;
-			int ind0 = readVertexIndex(baseX, baseY, VoxelChunk::UsableRange - 1);
-			int ind3 = readVertexIndex(baseX, baseY - 1, VoxelChunk::UsableRange - 1);
-			if (y % 2 == 1){
-				edgeDesc->gen2D_x_tri(x, y, &tempIndices, ind0, true);
-			}
-			else{
-				edgeDesc->gen2D_x_quad(x, y, &tempIndices, ind0, ind3, true);
-			}
-		}
-	}
-	//???
-	for (int y = 0; y < dim; y++){
-		for (int x = 1; x < dim; x++){
-			int baseX = x >> 1, baseY = y >> 1;
-			int ind0 = readVertexIndex(baseX, baseY, VoxelChunk::UsableRange - 1);
-			int ind3 = readVertexIndex(baseX - 1, baseY, VoxelChunk::UsableRange - 1);
-			if (x % 2 == 1){
-				edgeDesc->gen2D_y_tri(x, y, &tempIndices, ind0, true);
-			}
-			else{
-				edgeDesc->gen2D_y_quad(x, y, &tempIndices, ind0, ind3, true);
-			}
-		}
-	}
-
-}*/
 
 void VoxelChunk::generateEdge1D(int facing){
 	const int mapping[] = {
@@ -451,69 +359,10 @@ void VoxelChunk::generateEdge1D(int facing){
 	}
 }
 
-// adjChunk should be at the negative side of *this chunk.
-// a generalized version
-void VoxelChunk::createEdgeDesc2D(int thisLod, VoxelChunk* adjChunk, int loc0, int loc1, int adjLod, int facing){
-	// this value should be derived from the positions and lod values of the two chunks.
-	const int mapping[6] = {2, 1, 0, 2, 0, 1};
-	VoxelChunkEdgeDesc* edgeDesc;
-	edgeDesc = &(adjChunk->edgeDescs[facing]);
-	if (edgeDesc->lodDiff == -1){
-		edgeDesc->init(thisLod, adjLod);
-	}
-
-	vec3 vertTranslate;
-	if (facing == 0){
-		vertTranslate.x = UsableRange;
-		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
-		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
-	}
-	else if (facing == 1){
-		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.y = UsableRange;
-		vertTranslate.z = (float)(loc1 * UsableRange) * 0.5f;
-	}
-	else if (facing == 2){
-		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
-		vertTranslate.z = UsableRange;
-	}
-
-	int vertIncre = adjChunk->tempVertices.size();
-
-	for (int c1 = 0; c1 < UsableRange; c1++){
-		for (int c0 = 0; c0 < UsableRange; c0++){
-			int usableIndex = 0;
-			if(facing == 0)usableIndex = calcUsableIndex(0, c1, c0);
-			else if (facing == 1)usableIndex = calcUsableIndex(c0, 0, c1);
-			else if (facing == 2)usableIndex = calcUsableIndex(c0, c1, 0);
-			int vidx = indexMap[usableIndex];
-			if (vidx == -1)continue;
-			// first we get the vertex from this chunk's vertex list.
-			vec3 vert = tempVertices[vidx];
-			// transform this vertex with respect to the two lod values.
-			vert *= edgeDesc->vertScale;
-			vert += vertTranslate;
-			// copy the vertex to adjChunk's vertex array,(and the normal too)
-			adjChunk->tempVertices.push_back(vert);
-			vec3 normal = tempNormals[vidx];
-			adjChunk->tempNormals.push_back(normal);
-			// then store the index in the edge desc structure.
-			int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, c1 + loc1 * UsableRange);
-			edgeDesc->indexMap[idx] = vertIncre;
-			vertIncre++;
-
-			// now we copy the edge flags.
-			// first x then z.
-			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
-			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
-		}
-	}
-}
 // to generate the 1D seam edge desc, we need to specify which of the three seams
 // we define 3 being the edge that's parallel to the x axis, and so on.
 
-void VoxelChunk::createEdgeDesc1D(int thisLod, VoxelChunk* adjChunk, int loc0, int adjLod, int facing){
+void VoxelChunk::createEdgeDesc1D(int thisLod, int loc0, VoxelChunk* adjChunk, int adjLod, int facing){
 	// this value should be derived from the positions and lod values of the two chunks.
 	const int mapping[3] = { 0, 1, 2};
 	VoxelChunkEdgeDesc* edgeDesc;

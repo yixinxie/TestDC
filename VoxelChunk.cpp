@@ -17,8 +17,8 @@ const int indexOrder[] = {
 VoxelChunk::VoxelChunk() :_data(nullptr){
 }
 void VoxelChunk::createDataArray(){
-	_data = new VoxelData[DataRange * DataRange * DataRange];
-	memset(_data, 0, sizeof(VoxelData) * DataRange * DataRange * DataRange);
+	_data = new VoxelData[VoxelConstants::DataRange * VoxelConstants::DataRange * VoxelConstants::DataRange];
+	memset(_data, 0, sizeof(VoxelData) * VoxelConstants::DataRange * VoxelConstants::DataRange * VoxelConstants::DataRange);
 }
 void VoxelChunk::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();
@@ -44,9 +44,9 @@ void VoxelChunk::performSDF(SamplerFunction* sampler){
 void VoxelChunk::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
 	ivec3 minBound = ivec3(x, y, z);
 	int step = 1 << (w);
-	for (int zi = 0; zi < VoxelChunk::DataRange; zi++){
-		for (int yi = 0; yi < VoxelChunk::DataRange; yi++){
-			for (int xi = 0; xi < VoxelChunk::DataRange; xi++){
+	for (int zi = 0; zi < VoxelConstants::DataRange; zi++){
+		for (int yi = 0; yi < VoxelConstants::DataRange; yi++){
+			for (int xi = 0; xi < VoxelConstants::DataRange; xi++){
 				ivec3 pos = minBound + ivec3(xi, yi, zi) * step;
 				vec3 intersections;
 				VoxelData voxel;
@@ -102,12 +102,12 @@ void VoxelChunk::generateVertices(){
 	int intersectionCount;
 	int vertexId = 0;
 	{
-		int indexMapLength = UsableRange * UsableRange * UsableRange;
+		int indexMapLength = VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange;
 		memset(indexMap, -1, sizeof(indexMap));
 	}
-	for (int z = 0; z < UsableRange; z++){
-		for (int y = 0; y < UsableRange; y++){
-			for (int x = 0; x < UsableRange; x++){
+	for (int z = 0; z < VoxelConstants::UsableRange; z++){
+		for (int y = 0; y < VoxelConstants::UsableRange; y++){
+			for (int x = 0; x < VoxelConstants::UsableRange; x++){
 				int idx = calcDataIndex(x, y, z);
 				int usableIndex = calcUsableIndex(x, y, z);
 				solver.reset();
@@ -206,9 +206,9 @@ void VoxelChunk::generateVertices(){
 
 void VoxelChunk::generateIndices(){
 	tempIndices.clear();
-	for (int z = 0; z < UsableRange; z++){
-		for (int y = 0; y < UsableRange; y++){
-			for (int x = 0; x < UsableRange; x++){
+	for (int z = 0; z < VoxelConstants::UsableRange; z++){
+		for (int y = 0; y < VoxelConstants::UsableRange; y++){
+			for (int x = 0; x < VoxelConstants::UsableRange; x++){
 				int idx = calcDataIndex(x, y, z);
 				int usableIndex = calcUsableIndex(x, y, z);
 				if (x == 1 && y == 1 && z == 0){
@@ -273,14 +273,10 @@ void VoxelChunk::generateIndices(){
 			}
 		}
 	}
-	/*gen2DX(&edgeDescs[0], edgeDescs[0].getDim());
-	gen2DY(&edgeDescs[1], edgeDescs[1].getDim());
-	gen2DZ(&edgeDescs[2], edgeDescs[2].getDim());*/
 
 	edgeDescs[0].gen2DUni(&tempIndices, false);
 	edgeDescs[1].gen2DUni(&tempIndices, false);
 	edgeDescs[2].gen2DUni(&tempIndices, true);
-	//gen2DUni(&edgeDescs[2], edgeDescs[2].getDim());
 
 	/*generateEdge1D(0);
 	generateEdge1D(1);
@@ -299,7 +295,7 @@ void VoxelChunk::generateEdge1D(int facing){
 	
 	if (edgeDescHinge->initialized && edgeDescC0->initialized && edgeDescC1->initialized){
 		int incr = 0;
-		int usableRangeMinusOne = UsableRange - 1;
+		int usableRangeMinusOne = VoxelConstants::UsableRange - 1;
 		int* px;
 		int* py;
 		int* pz;
@@ -318,19 +314,15 @@ void VoxelChunk::generateEdge1D(int facing){
 			py = &incr;
 			pz = &usableRangeMinusOne;
 		}
-		for (; incr < UsableRange; incr++){
-			int edgeCellIndex = edgeDescHinge->calcIndex(*pz * 2, 0);
-			char zmin = edgeDescHinge->seamEdges[edgeCellIndex * 2];
+		for (; incr < VoxelConstants::UsableRange; incr++){
+			char zmin = edgeDescHinge->readSeamEdge(*pz * 2, 0);
 			if (zmin == -1)continue;
-			int ind3 = edgeDescHinge->indexMap[edgeCellIndex];
+			int ind3 = edgeDescHinge->readIndex(*pz * 2);
 			// read the index from the base.
 			int ind0 = readVertexIndex(*px, *py, *pz);
 
-			int toIdx = edgeDescC0->calcIndex(incr * 2, UsableRange * 2 - 1);
-			int ind1 = edgeDescC0->indexMap[toIdx];
-
-			toIdx = edgeDescC1->calcIndex(UsableRange * 2 - 1, incr * 2);
-			int ind2 = edgeDescC1->indexMap[toIdx];
+			int ind1 = edgeDescC0->readIndex2D(incr * 2, VoxelConstants::UsableRange * 2 - 1);
+			int ind2 = edgeDescC1->readIndex2D(VoxelConstants::UsableRange * 2 - 1, incr * 2);
 
 			// this time we need to wind 2 triangles, or a quad.
 			if (zmin == 0){
@@ -363,34 +355,59 @@ void VoxelChunk::generateEdge1D(int facing){
 
 void VoxelChunk::createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, int facing){
 	// this value should be derived from the positions and lod values of the two chunks.
+	int type = facing - 3;
 	const int mapping[3] = { 0, 1, 2};
+	const int _1D2DAdjacency[] = {
+		5, 1, 0, // hinge that lies paralelle to the z axis, x+ plane, y+ plane
+		3, 1, 2,
+		4, 2, 0,
+	};
 	VoxelChunkTransitionSurfaceDesc* edgeDesc;
 	edgeDesc = &(adjChunk->edgeDescs[facing]);
 	if (edgeDesc->initialized == false){
 		edgeDesc->init(lodDiff, 1);
+
+		// this portion of desc initialization does not depend on the lod of *this.
+		// gather the two 2D transition desc to form its indexMap array.
+		VoxelChunkTransitionSurfaceDesc* left = &(adjChunk->edgeDescs[_1D2DAdjacency[type * 3 + 1]]);
+		VoxelChunkTransitionSurfaceDesc* right = &(adjChunk->edgeDescs[_1D2DAdjacency[type * 3 + 2]]);
+		if (type == 0){
+			int usableRangeMinusOne = VoxelConstants::UsableRange * 2 - 1;
+			for (int c0 = 0; c0 < VoxelConstants::UsableRange * 2; c0++){
+				edgeDesc->writeAdjIndex(c0, 1, left->readIndex2D(usableRangeMinusOne, c0));
+				edgeDesc->writeAdjIndex(c0, 2, right->readIndex2D(c0, usableRangeMinusOne));
+			}
+		}
+		for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
+			int adjUsableIndex = 0;
+			if (type == 0)adjUsableIndex = calcUsableIndex(VoxelConstants::UsableRange - 1, VoxelConstants::UsableRange - 1, c0);
+			else if (type == 1)adjUsableIndex = calcUsableIndex(c0, VoxelConstants::UsableRange - 1, VoxelConstants::UsableRange - 1);
+			else if (type == 2)adjUsableIndex = calcUsableIndex(c0, VoxelConstants::UsableRange - 1, VoxelConstants::UsableRange - 1);
+
+			edgeDesc->writeBaseIndex(c0, adjChunk->indexMap[adjUsableIndex]);
+		}
 	}
 
 	vec3 vertTranslate;
 	if (facing == 3){
-		
-		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.y = UsableRange;
-		vertTranslate.z = UsableRange;
+		vertTranslate.x = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.y = VoxelConstants::UsableRange;
+		vertTranslate.z = VoxelConstants::UsableRange;
 	}
 	else if (facing == 4){
-		vertTranslate.x = UsableRange;
-		vertTranslate.y = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.z = UsableRange;
+		vertTranslate.x = VoxelConstants::UsableRange;
+		vertTranslate.y = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.z = VoxelConstants::UsableRange;
 	}
 	else if (facing == 5){
-		vertTranslate.x = UsableRange;
-		vertTranslate.y = UsableRange;
-		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.x = VoxelConstants::UsableRange;
+		vertTranslate.y = VoxelConstants::UsableRange;
+		vertTranslate.z = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
 	}
 
 	int vertIncre = adjChunk->tempVertices.size();
 
-	for (int c0 = 0; c0 < UsableRange; c0++){
+	for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
 		int usableIndex = 0;
 		if (facing == 3)usableIndex = calcUsableIndex(c0, 0, 0);
 		else if (facing == 4)usableIndex = calcUsableIndex(0, c0, 0);
@@ -407,12 +424,12 @@ void VoxelChunk::createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, i
 		vec3 normal = tempNormals[vidx];
 		adjChunk->tempNormals.push_back(normal);
 		// then store the index in the edge desc structure.
-		int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, 0);
-		edgeDesc->indexMap[idx] = vertIncre;
+		edgeDesc->writeIndex(c0 + loc0 * VoxelConstants::UsableRange, vertIncre);
 		vertIncre++;
 
 		// now we copy the edge flags.
-		edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing - 3]];
+		edgeDesc->writeSeamEdgeX(c0 + loc0 * VoxelConstants::UsableRange, edgeMap[usableIndex * 3 + mapping[type]]);
+		
 	}
 }
 
@@ -426,41 +443,41 @@ void VoxelChunk::createEdgeDesc2DUni(int lodDiff, int loc0, int loc1, VoxelChunk
 		edgeDesc->init(lodDiff, 0);
 
 		// copy the original index from the adjacent chunk to the edge desc structure.
-		for (int c1 = 0; c1 < UsableRange; c1++){
-			for (int c0 = 0; c0 < UsableRange; c0++){
+		for (int c1 = 0; c1 < VoxelConstants::UsableRange; c1++){
+			for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
 				
-				int otherIdx = c0 + c1 * UsableRange;
+				int otherIdx = c0 + c1 * VoxelConstants::UsableRange;
 				int adjUsableIndex = 0;
-				if (facing == 0)adjUsableIndex = calcUsableIndex(UsableRange - 1, c1, c0);
-				else if (facing == 1)adjUsableIndex = calcUsableIndex(c0, UsableRange - 1, c1);
-				else if (facing == 2)adjUsableIndex = calcUsableIndex(c0, c1, UsableRange - 1);
+				if (facing == 0)adjUsableIndex = calcUsableIndex(VoxelConstants::UsableRange - 1, c1, c0);
+				else if (facing == 1)adjUsableIndex = calcUsableIndex(c0, VoxelConstants::UsableRange - 1, c1);
+				else if (facing == 2)adjUsableIndex = calcUsableIndex(c0, c1, VoxelConstants::UsableRange - 1);
 
-				edgeDesc->baseIndexMap[otherIdx] = adjChunk->indexMap[adjUsableIndex];
+				edgeDesc->writeBaseIndex2D(c0, c1, adjChunk->indexMap[adjUsableIndex]);
 			}
 		}
 	}
 
 	vec3 vertTranslate;
 	if (facing == 0){
-		vertTranslate.x = UsableRange;
-		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
-		vertTranslate.z = (float)(loc0 * UsableRange) * 0.5f;
+		vertTranslate.x = VoxelConstants::UsableRange;
+		vertTranslate.y = (float)(loc1 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.z = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
 	}
 	else if (facing == 1){
-		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.y = UsableRange;
-		vertTranslate.z = (float)(loc1 * UsableRange) * 0.5f;
+		vertTranslate.x = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.y = VoxelConstants::UsableRange;
+		vertTranslate.z = (float)(loc1 * VoxelConstants::UsableRange) * 0.5f;
 	}
 	else if (facing == 2){
-		vertTranslate.x = (float)(loc0 * UsableRange) * 0.5f;
-		vertTranslate.y = (float)(loc1 * UsableRange) * 0.5f;
-		vertTranslate.z = UsableRange;
+		vertTranslate.x = (float)(loc0 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.y = (float)(loc1 * VoxelConstants::UsableRange) * 0.5f;
+		vertTranslate.z = VoxelConstants::UsableRange;
 	}
 
 	int vertIncre = adjChunk->tempVertices.size();
 
-	for (int c1 = 0; c1 < UsableRange; c1++){
-		for (int c0 = 0; c0 < UsableRange; c0++){
+	for (int c1 = 0; c1 < VoxelConstants::UsableRange; c1++){
+		for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
 			int usableIndex = 0;
 			if (facing == 0)usableIndex = calcUsableIndex(0, c1, c0);
 			else if (facing == 1)usableIndex = calcUsableIndex(c0, 0, c1);
@@ -478,14 +495,14 @@ void VoxelChunk::createEdgeDesc2DUni(int lodDiff, int loc0, int loc1, VoxelChunk
 			vec3 normal = tempNormals[vidx];
 			adjChunk->tempNormals.push_back(normal);
 			// step 2: then store the index in the edge desc structure.
-			int idx = edgeDesc->calcIndex(c0 + loc0 * UsableRange, c1 + loc1 * UsableRange);
-			edgeDesc->indexMap[idx] = vertIncre;
+			edgeDesc->writeIndex2D(c0 + loc0 * VoxelConstants::UsableRange, c1 + loc1 * VoxelConstants::UsableRange, vertIncre);
 			vertIncre++;
 			
 			// now we copy the edge flags.
 			// first x then z.
-			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
-			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
+			edgeDesc->writeSeamEdgeXY(c0 + loc0 * VoxelConstants::UsableRange, c1 + loc1 * VoxelConstants::UsableRange, 
+				edgeMap[usableIndex * 3 + mapping[facing * 2]],
+				edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]]);
 		}
 	}
 }

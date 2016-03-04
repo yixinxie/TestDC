@@ -128,5 +128,8 @@
     <ClInclude Include="VoxelChunkTransitionSurfaceDesc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="VoxelConstants.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

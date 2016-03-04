@@ -12,12 +12,12 @@ void SF_Box::setSpecs(const vec3& min, const vec3& max){
 	minBound.x = (int)floor(rectMin.x) - 1;
 	minBound.y = (int)floor(rectMin.y) - 1;
 	minBound.z = (int)floor(rectMin.z) - 1;
-	minBound = clamp(minBound, ivec3(0, 0, 0), ivec3(VoxelChunk::UsableRange, VoxelChunk::UsableRange, VoxelChunk::UsableRange));
+	minBound = clamp(minBound, ivec3(0, 0, 0), ivec3(VoxelConstants::UsableRange, VoxelConstants::UsableRange, VoxelConstants::UsableRange));
 
 	maxBound.x = (int)floor(rectMax.x) + 1;
 	maxBound.y = (int)floor(rectMax.y) + 1;
 	maxBound.z = (int)floor(rectMax.z) + 1;
-	maxBound = clamp(maxBound, ivec3(0, 0, 0), ivec3(VoxelChunk::UsableRange, VoxelChunk::UsableRange, VoxelChunk::UsableRange));
+	maxBound = clamp(maxBound, ivec3(0, 0, 0), ivec3(VoxelConstants::UsableRange, VoxelConstants::UsableRange, VoxelConstants::UsableRange));
 }
 unsigned char SF_Box::materialFunc(const ivec3& pos, const int cellSize, vec3* intersects, vec3* outNormal0, vec3* outNormal1, vec3* outNormal2){
 	unsigned char material = 0;

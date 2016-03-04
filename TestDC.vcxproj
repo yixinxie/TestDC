@@ -115,6 +115,7 @@
     <ClInclude Include="Visualize.h" />
     <ClInclude Include="VoxelChunk.h" />
     <ClInclude Include="VoxelChunkTransitionSurfaceDesc.h" />
+    <ClInclude Include="VoxelConstants.h" />
     <ClInclude Include="VoxelData.h" />
     <ClInclude Include="VoxelManager.h" />
   </ItemGroup>

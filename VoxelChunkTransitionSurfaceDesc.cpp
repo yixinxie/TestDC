@@ -10,9 +10,48 @@ VoxelChunkTransitionSurfaceDesc::~VoxelChunkTransitionSurfaceDesc(){
 }
 //
 void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff, int type){
-	dimInCells = VoxelChunk::UsableRange * 2;
+	
 	initialized = true;
 	if (_lodDiff == -1){
+		// if adjChunk covers more volume than this(less detailed),
+		dimInCells = VoxelConstants::UsableRange * 2;
+		vertScale = 0.5f;
+
+	}
+	else if (_lodDiff == 0){
+		dimInCells = VoxelConstants::UsableRange * 2;
+		vertScale = 1;
+	}
+	else if (_lodDiff == 1){
+		dimInCells = VoxelConstants::UsableRange * 2;
+		vertScale = 2;
+	}
+	else{
+		printf_s("irregular lod adjacency detected!\n");
+	}
+	
+	if (baseIndexMap == nullptr){
+		// regardless of the lod relationship, the adjacent slice should always be of its original size.
+		baseIndexMap = new int[VoxelConstants::UsableRange * VoxelConstants::UsableRange];
+		memset(baseIndexMap, -1, VoxelConstants::UsableRange * VoxelConstants::UsableRange * sizeof(int));
+	}
+	if (indexMap == nullptr){
+		/* we build the index array on the edge desc to be twice in dimension, or four times as large as one slice
+		in the original structure in VoxelChunk.
+		This is to ensure we have enough storage for all transition scenarios.
+		*/
+		indexMap = new int[dimInCells * dimInCells];
+		memset(indexMap, -1, dimInCells * dimInCells * sizeof(int));
+	}
+	int len = flagNumPerCell * dimInCells* dimInCells;
+	seamEdges = new char[len];
+	memset(seamEdges, -1, len);
+}
+void VoxelChunkTransitionSurfaceDesc::init1D(int _lodDiff){
+	dimInCells = VoxelConstants::UsableRange * 2;
+	initialized = true;
+	if (_lodDiff == -1){
+		// if adjChunk covers more volume than this(less detailed),
 		vertScale = 0.5f;
 	}
 	else if (_lodDiff == 0){
@@ -21,24 +60,17 @@ void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff, int type){
 	else if (_lodDiff == 1){
 		vertScale = 2;
 	}
-	else{
-		printf_s("irregular lod adjacency detected!\n");
-	}
 
-	if (indexMap == nullptr){
-		// if adjChunk covers more volume than this(less detailed),
-		// we want to make the indexMap twice as large as its original slice.
-		indexMap = new int[dimInCells * dimInCells];
-		memset(indexMap, -1, dimInCells * dimInCells * sizeof(int));
-	}
 	if (baseIndexMap == nullptr){
-		// regardless of the lod relationship, the adjacent slice should always be of its original size.
-		baseIndexMap = new int[VoxelChunk::UsableRange * VoxelChunk::UsableRange];
-		memset(baseIndexMap, -1, VoxelChunk::UsableRange * VoxelChunk::UsableRange * sizeof(int));
+		baseIndexMap = new int[VoxelConstants::UsableRange];
+		memset(baseIndexMap, -1, VoxelConstants::UsableRange * sizeof(int));
 	}
-
-	const int flagNumPerCell = 2;
-	int len = flagNumPerCell * dimInCells* dimInCells;
+	if (indexMap == nullptr){
+		indexMap = new int[dimInCells * 3];
+		memset(indexMap, -1, dimInCells * 3 * sizeof(int));
+	}
+	
+	int len = flagNumPerCell * dimInCells;
 	seamEdges = new char[len];
 	memset(seamEdges, -1, len);
 }
@@ -142,13 +174,13 @@ void VoxelChunkTransitionSurfaceDesc::gen2DUni(std::vector<unsigned int>* tempIn
 		for (int x = 0; x < dimInCells; x++){
 			int baseX = x >> 1, baseY = y >> 1;
 			// first read the vertex index from the original index table.
-			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
+			int ind0 = baseIndexMap[baseX + baseY * VoxelConstants::UsableRange];
 
 			if (y % 2 == 1){
 				gen2D_x_tri(x, y, tempIndices, ind0, inverted);
 			}
 			else{
-				int ind3 = baseIndexMap[baseX + (baseY - 1) * VoxelChunk::UsableRange];
+				int ind3 = baseIndexMap[baseX + (baseY - 1) * VoxelConstants::UsableRange];
 				gen2D_x_quad(x, y, tempIndices, ind0, ind3, inverted);
 			}
 		}
@@ -161,13 +193,13 @@ void VoxelChunkTransitionSurfaceDesc::gen2DUni(std::vector<unsigned int>* tempIn
 				int sdf = 0;
 			}
 			// first read the vertex index from the original index table.
-			int ind0 = baseIndexMap[baseX + baseY * VoxelChunk::UsableRange];
+			int ind0 = baseIndexMap[baseX + baseY * VoxelConstants::UsableRange];
 
 			if (x % 2 == 1){
 				gen2D_y_tri(x, y, tempIndices, ind0, inverted);
 			}
 			else{
-				int ind3 = baseIndexMap[baseX - 1 + (baseY) * VoxelChunk::UsableRange];
+				int ind3 = baseIndexMap[baseX - 1 + (baseY) * VoxelConstants::UsableRange];
 				gen2D_y_quad(x, y, tempIndices, ind0, ind3, inverted);
 			}
 		}

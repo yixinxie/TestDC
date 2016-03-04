@@ -2,6 +2,7 @@
 #include "VoxelData.h"
 #include "VoxelChunkTransitionSurfaceDesc.h"
 #include <vector>
+#include "VoxelConstants.h"
 #include <glm/glm.hpp>
 #include "qef.h"
 #include "SamplerFunction.h"
@@ -11,31 +12,24 @@ using namespace glm;
 using namespace svd;
 class VoxelChunk{
 public:
-	static const int UsableRangeShift = 1; // # of bit shift
-	static const int UsableRange = 1 << UsableRangeShift;
-	// for array based chunk storage, we set DataRange = UsableRange + 2, TraverseRange = UsableRage + 1
-	// but for octree based storage, we set DataRange = UsableRange + 1, TraverseRange = UsableRange
-	//static const int TraverseRange = UsableRange;
-	static const int DataRange = UsableRange + 1;
-	
 	
 private:
 	VoxelData* _data;
 
 	// tables required in the vertex generation.
-	int indexMap[UsableRange * UsableRange * UsableRange];
-	// this can be optimized to use only 3 * 3 * UsableRange ^ 2 chars.
-	char edgeMap[UsableRange * UsableRange * UsableRange * 3];
+	int indexMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange];
+	// this can be optimized to use only 3 * 3 * VoxelConstants::UsableRange ^ 2 chars.
+	char edgeMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange * 3];
 	VoxelChunkTransitionSurfaceDesc edgeDescs[7];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
 	std::vector<vec3> tempNormals;
 	inline int calcDataIndex(int x, int y, int z){
-		return x + y * DataRange + z * DataRange * DataRange;
+		return x + y * VoxelConstants::DataRange + z * VoxelConstants::DataRange * VoxelConstants::DataRange;
 	}
 	inline int calcUsableIndex(int x, int y, int z){
-		return x + y * UsableRange + z * UsableRange * UsableRange;
+		return x + y * VoxelConstants::UsableRange + z * VoxelConstants::UsableRange * VoxelConstants::UsableRange;
 	}
 
 	inline VoxelData* read(const int x, const int y, const int z){
@@ -96,7 +90,7 @@ public:
 	// experimental
 	
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
-	void createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, int facing);
+	void createEdgeDesc1D(const int lodDiff, const int loc0, VoxelChunk* adjChunk, const int facing);
 
 	void createEdgeDesc2DUni(const int lodDiff, const int loc0, const int loc1, VoxelChunk* adjChunk, const int facing);
 };

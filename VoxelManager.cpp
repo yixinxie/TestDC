@@ -1,14 +1,15 @@
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
 #include "Visualize.h"
+#include "VoxelConstants.h"
 void VoxelManager::initChunkSize(int _xcount, int _ycount, int _zcount){
 	xCount = _xcount;
 	yCount = _ycount;
 	zCount = _zcount;
 
-	worldBoundX = xCount * VoxelChunk::UsableRange;
-	worldBoundY = yCount * VoxelChunk::UsableRange;
-	worldBoundZ = zCount * VoxelChunk::UsableRange;
+	worldBoundX = xCount * VoxelConstants::UsableRange;
+	worldBoundY = yCount * VoxelConstants::UsableRange;
+	worldBoundZ = zCount * VoxelConstants::UsableRange;
 }
 
 void VoxelManager::initWorldSize(int _sizeX, int _sizeY, int _sizeZ){
@@ -16,20 +17,20 @@ void VoxelManager::initWorldSize(int _sizeX, int _sizeY, int _sizeZ){
 	worldBoundY = _sizeY;
 	worldBoundZ = _sizeZ;
 
-	xCount = worldBoundX / VoxelChunk::UsableRange;
-	yCount = worldBoundY / VoxelChunk::UsableRange;
-	zCount = worldBoundZ / VoxelChunk::UsableRange;
+	xCount = worldBoundX / VoxelConstants::UsableRange;
+	yCount = worldBoundY / VoxelConstants::UsableRange;
+	zCount = worldBoundZ / VoxelConstants::UsableRange;
 	if (xCount == 0)xCount = 1;
 	if (yCount == 0)yCount = 1;
 	if (zCount == 0)zCount = 1;
 }
 void VoxelManager::write(const VoxelData& vData, const int x, const int y, const int z, const int w){
-	int chunkPosX = x >> VoxelChunk::UsableRangeShift;
-	int chunkPosY = y >> VoxelChunk::UsableRangeShift;
-	int chunkPosZ = z >> VoxelChunk::UsableRangeShift;
-	int localX = x % VoxelChunk::UsableRange;
-	int localY = y % VoxelChunk::UsableRange;
-	int localZ = z % VoxelChunk::UsableRange;
+	int chunkPosX = x >> VoxelConstants::UsableRangeShift;
+	int chunkPosY = y >> VoxelConstants::UsableRangeShift;
+	int chunkPosZ = z >> VoxelConstants::UsableRangeShift;
+	int localX = x % VoxelConstants::UsableRange;
+	int localY = y % VoxelConstants::UsableRange;
+	int localZ = z % VoxelConstants::UsableRange;
 
 	int chunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ, 0);
 	createIfNeeded(chunkIndex);
@@ -37,14 +38,14 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	int chunkOffsetX = 0;
 	int chunkOffsetY = 0;
 	int chunkOffsetZ = 0;
-	if (localX < VoxelChunk::DataRange - VoxelChunk::UsableRange){
+	if (localX < VoxelConstants::DataRange - VoxelConstants::UsableRange){
 		// a visit to the neighbour chunk is required.
 		chunkOffsetX = -1;
 	}
-	if (localY < VoxelChunk::DataRange - VoxelChunk::UsableRange){
+	if (localY < VoxelConstants::DataRange - VoxelConstants::UsableRange){
 		chunkOffsetY = -1;
 	}
-	if (localZ < VoxelChunk::DataRange - VoxelChunk::UsableRange){
+	if (localZ < VoxelConstants::DataRange - VoxelConstants::UsableRange){
 		chunkOffsetZ = -1;
 	}
 	// -1
@@ -53,21 +54,21 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 		
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY, localZ, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelConstants::UsableRange, localY, localZ, vData);
 	}
 	if (chunkOffsetY < 0 
 		&& chunkPosY + chunkOffsetY >= 0){
 
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelChunk::UsableRange, localZ, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelConstants::UsableRange, localZ, vData);
 	}
 	if (chunkOffsetZ < 0
 		&& chunkPosZ + chunkOffsetZ >= 0){
 
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY, chunkPosZ + chunkOffsetZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX, localY, localZ + VoxelChunk::UsableRange, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX, localY, localZ + VoxelConstants::UsableRange, vData);
 	}
 	// -1 -1
 	if (chunkOffsetX < 0 && chunkOffsetY < 0 
@@ -75,21 +76,21 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY + VoxelChunk::UsableRange, localZ, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelConstants::UsableRange, localY + VoxelConstants::UsableRange, localZ, vData);
 	}
 	if (chunkOffsetY < 0 && chunkOffsetZ < 0 
 		&& chunkPosY + chunkOffsetY >= 0 && chunkPosZ + chunkOffsetZ >= 0){
 
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelChunk::UsableRange, localZ + VoxelChunk::UsableRange, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX, localY + VoxelConstants::UsableRange, localZ + VoxelConstants::UsableRange, vData);
 	}
 	if (chunkOffsetX < 0 && chunkOffsetZ < 0 
 		&& chunkPosX + chunkOffsetX >= 0 && chunkPosZ + chunkOffsetZ >= 0){
 
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY, chunkPosZ + chunkOffsetZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY, localZ + VoxelChunk::UsableRange, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelConstants::UsableRange, localY, localZ + VoxelConstants::UsableRange, vData);
 	}
 	// -1 -1 -1
 	if (chunkOffsetX < 0 && chunkOffsetY < 0 && chunkOffsetZ < 0 
@@ -97,7 +98,7 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 		
 		int neighbourChunkIndex = calcChunkIndex(chunkPosX + chunkOffsetX, chunkPosY + chunkOffsetY, chunkPosZ + chunkOffsetZ, w);
 		createIfNeeded(neighbourChunkIndex);
-		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelChunk::UsableRange, localY + VoxelChunk::UsableRange, localZ + VoxelChunk::UsableRange, vData);
+		chunks[neighbourChunkIndex]->writeRaw(localX + VoxelConstants::UsableRange, localY + VoxelConstants::UsableRange, localZ + VoxelConstants::UsableRange, vData);
 	}
 
 }

@@ -19,29 +19,24 @@ void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff, int type){
 
 	}
 	else if (_lodDiff == 0){
-		dimInCells = VoxelConstants::UsableRange * 2;
+		dimInCells = VoxelConstants::UsableRange;
 		vertScale = 1;
 	}
 	else if (_lodDiff == 1){
-		dimInCells = VoxelConstants::UsableRange * 2;
+		dimInCells = VoxelConstants::UsableRange;
 		vertScale = 2;
 	}
 	else{
 		printf_s("irregular lod adjacency detected!\n");
 	}
 	
-	if (baseIndexMap == nullptr){
-		// regardless of the lod relationship, the adjacent slice should always be of its original size.
-		baseIndexMap = new int[VoxelConstants::UsableRange * VoxelConstants::UsableRange];
-		memset(baseIndexMap, -1, VoxelConstants::UsableRange * VoxelConstants::UsableRange * sizeof(int));
-	}
 	if (indexMap == nullptr){
 		/* we build the index array on the edge desc to be twice in dimension, or four times as large as one slice
 		in the original structure in VoxelChunk.
 		This is to ensure we have enough storage for all transition scenarios.
 		*/
-		indexMap = new int[dimInCells * dimInCells];
-		memset(indexMap, -1, dimInCells * dimInCells * sizeof(int));
+		indexMap = new int[dimInCells * dimInCells * 2];
+		memset(indexMap, -1, dimInCells * dimInCells * 2 * sizeof(int));
 	}
 	int len = flagNumPerCell * dimInCells* dimInCells;
 	seamEdges = new char[len];
@@ -74,134 +69,51 @@ void VoxelChunkTransitionSurfaceDesc::init1D(int _lodDiff){
 	seamEdges = new char[len];
 	memset(seamEdges, -1, len);
 }
-
-void VoxelChunkTransitionSurfaceDesc::gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
-	// now we read the four vertex indices from the table in edge desc.
-	int ind1 = getVertexIndex(x, y);
-	int ind2 = getVertexIndex(x, y - 1); // ifs
-
-	char edgeA = getEdgeFlagA(x, y);
-	// only need to wind a single triangle.
-	char cond0 = (inverted) ? 1 : 0;
-	char cond1 = (inverted) ? 0 : 1;
-	if (edgeA == cond0){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind2);
-		tempIndices->push_back(ind1);
-	}
-	else if (edgeA == cond1){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind2);
-	}
-}
-void VoxelChunkTransitionSurfaceDesc::gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
-	
-	int ind1 = getVertexIndex(x, y);
-	int ind2 = getVertexIndex(x, y - 1);
-	char edgeA = getEdgeFlagA(x, y);
-	char cond0 = (inverted) ? 1 : 0;
-	char cond1 = (inverted) ? 0 : 1;
-	if (edgeA == cond1){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind3);
-
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind2);
-	}
-	else if (edgeA == cond0){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind1);
-
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind2);
-		tempIndices->push_back(ind1);
-		
-	}
-}
-
-
-void VoxelChunkTransitionSurfaceDesc::gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
-	int ind1 = getVertexIndex(x, y);
-	int ind2 = getVertexIndex(x - 1, y);
-
-	char edgeB = getEdgeFlagB(x, y);
-	char cond0 = (inverted) ? 1 : 0;
-	char cond1 = (inverted) ? 0 : 1;
-	if (edgeB == cond0){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind2);
-	}
-	else if (edgeB == cond1){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind2);
-		tempIndices->push_back(ind1);
-
-	}
-}
-void VoxelChunkTransitionSurfaceDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
-
-	int ind1 = getVertexIndex(x, y);
-	int ind2 = getVertexIndex(x - 1, y);
-	char edgeB = getEdgeFlagB(x, y);
-	char cond0 = (inverted) ? 1 : 0;
-	char cond1 = (inverted) ? 0 : 1;
-	if (edgeB == cond0){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind3);
-
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind1);
-		tempIndices->push_back(ind2);
-	}
-	else if (edgeB == cond1){
-		tempIndices->push_back(ind0);
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind1);
-
-		tempIndices->push_back(ind3);
-		tempIndices->push_back(ind2);
-		tempIndices->push_back(ind1);
-	}
-}
-void VoxelChunkTransitionSurfaceDesc::gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2DUni2(std::vector<unsigned int>* tempIndices, bool inverted){
 	for (int y = 1; y < dimInCells; y++){
 		for (int x = 0; x < dimInCells; x++){
-			int baseX = x >> 1, baseY = y >> 1;
 			// first read the vertex index from the original index table.
-			int ind0 = baseIndexMap[baseX + baseY * VoxelConstants::UsableRange];
-
-			if (y % 2 == 1){
-				gen2D_x_tri(x, y, tempIndices, ind0, inverted);
+			int ind0 = readIndex2D(x, y, 0);
+			char edgeA = getEdgeFlagA(x, y);
+			if (edgeA != -1)
+			{
+				int ind3 = readIndex2D(x, y - 1, 0);
+				int ind1 = readIndex2D(x, y, 1);
+				int ind2 = readIndex2D(x, y - 1, 1);
+				windQuad(edgeA, ind0, ind1, ind2, ind3, tempIndices, inverted);
+				
 			}
-			else{
-				int ind3 = baseIndexMap[baseX + (baseY - 1) * VoxelConstants::UsableRange];
-				gen2D_x_quad(x, y, tempIndices, ind0, ind3, inverted);
+			char edgeB = getEdgeFlagB(x, y);
+			if (edgeB != -1)
+			{
+				int ind3 = readIndex2D(x - 1, y, 0);
+				int ind1 = readIndex2D(x, y, 1);
+				int ind2 = readIndex2D(x - 1, y, 1);
+
+				windQuad(edgeB, ind0, ind1, ind2, ind3, tempIndices, !inverted);
 			}
 		}
 	}
-	//???
-	for (int y = 0; y < dimInCells; y++){
-		for (int x = 1; x < dimInCells; x++){
-			int baseX = x >> 1, baseY = y >> 1;
-			if (x == 1 && y == 3){
-				int sdf = 0;
-			}
-			// first read the vertex index from the original index table.
-			int ind0 = baseIndexMap[baseX + baseY * VoxelConstants::UsableRange];
+}
+void VoxelChunkTransitionSurfaceDesc::windQuad(int edge, int ind0, int ind1, int ind2, int ind3, std::vector<unsigned int>* tempIndices, bool inverted){
+	char cond0 = (inverted) ? 1 : 0;
+	char cond1 = (inverted) ? 0 : 1;
+	if (edge == cond0){
+		tempIndices->push_back(ind0);
+		tempIndices->push_back(ind3);
+		tempIndices->push_back(ind1);
 
-			if (x % 2 == 1){
-				gen2D_y_tri(x, y, tempIndices, ind0, inverted);
-			}
-			else{
-				int ind3 = baseIndexMap[baseX - 1 + (baseY) * VoxelConstants::UsableRange];
-				gen2D_y_quad(x, y, tempIndices, ind0, ind3, inverted);
-			}
-		}
+		tempIndices->push_back(ind3);
+		tempIndices->push_back(ind2);
+		tempIndices->push_back(ind1);
+	}
+	else if (edge == cond1){
+		tempIndices->push_back(ind0);
+		tempIndices->push_back(ind1);
+		tempIndices->push_back(ind3);
+
+		tempIndices->push_back(ind3);
+		tempIndices->push_back(ind1);
+		tempIndices->push_back(ind2);
 	}
 }

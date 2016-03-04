@@ -16,11 +16,6 @@ private:
 	// length of an axis in number of cells. this takes lod into account.
 	int dimInCells;
 
-	void gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
-	void gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
-
-	void gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
-	void gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);
 	inline char getEdgeFlagA(int x, int y){
 		int edgeCellIndex = calcIndex(x, y);
 		return seamEdges[edgeCellIndex * 2];
@@ -29,13 +24,10 @@ private:
 		int edgeCellIndex = calcIndex(x, y);
 		return seamEdges[edgeCellIndex * 2 + 1];
 	}
-	inline char getVertexIndex(int x, int y){
-		int edgeCellIndex = calcIndex(x, y);
-		return indexMap[edgeCellIndex];
-	}
 	inline int calcIndex(int x, int y){
 		return x + y * dimInCells;
 	}
+	void windQuad(int edge, int index0, int index1, int index2, int index3, std::vector<unsigned int>* tempIndices, bool inverted);
 	int* baseIndexMap;
 	int* indexMap;
 	char* seamEdges;
@@ -51,6 +43,13 @@ public:
 	inline void writeAdjIndex(int x, int loc, int index){
 		indexMap[x * 3 + loc] = index;
 	}
+	
+
+	
+	inline int readIndex(int x){
+		return indexMap[x];
+	}
+
 	inline void writeBaseIndex(int x, int index){
 		baseIndexMap[x] = index;
 	}
@@ -58,29 +57,34 @@ public:
 		baseIndexMap[x + y * VoxelConstants::UsableRange] = index;
 	}
 
-	inline int readIndex2D(int x, int y){
-		return indexMap[calcIndex(x,y)];
-	}
-	inline int readIndex(int x){
-		return indexMap[x];
-	}
 	inline void writeIndex(int x, int index){
 		indexMap[x] = index;
 	}
-	inline void writeIndex2D(int x, int y, int index){
-		indexMap[calcIndex(x, y)] = index;
+	inline char readSeamEdge(int x, int y){
+		return seamEdges[calcIndex(x, y)];
 	}
 	inline void writeSeamEdgeX(int x, char valX){
 		seamEdges[x * 2] = valX;
 	}
+	///////////// NEW ATTEMPT
+	/*
+	this function writes the index value to the index map.
+	surface (0) indicates it should write to the base index slice.
+	surface (1) indicates the neighbour index slice.
+	*/
+	inline int readIndex2D(int x, int y, int surfaceId){
+		return indexMap[calcIndex(x, y) * 2 + surfaceId];
+	}
+	inline void writeIndex2D(int x, int y, int surfaceId, int index){
+		indexMap[calcIndex(x, y) * 2 + surfaceId] = index;
+	}
+	
 	inline void writeSeamEdgeXY(int x, int y, char valX, char valY){
 		int idx = calcIndex(x, y);
 		seamEdges[idx * 2] = valX;
 		seamEdges[idx * 2 + 1] = valY;
 	}
-	inline char readSeamEdge(int x, int y){
-		return seamEdges[calcIndex(x, y)];
-	}
+	
 
 	float vertScale;
 	bool initialized;
@@ -90,7 +94,7 @@ public:
 	void init(int lodDiff, int type);
 	void init1D(int lodDiff);
 
-	// new experiment!
 	void gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted);
+	void gen2DUni2(std::vector<unsigned int>* tempIndices, bool inverted);
 
 };

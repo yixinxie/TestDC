@@ -274,9 +274,9 @@ void VoxelChunk::generateIndices(){
 		}
 	}
 
-	edgeDescs[0].gen2DUni(&tempIndices, false);
-	edgeDescs[1].gen2DUni(&tempIndices, false);
-	edgeDescs[2].gen2DUni(&tempIndices, true);
+	edgeDescs[0].gen2DUni2(&tempIndices, false);
+	edgeDescs[1].gen2DUni2(&tempIndices, false);
+	edgeDescs[2].gen2DUni2(&tempIndices, true);
 
 	/*generateEdge1D(0);
 	generateEdge1D(1);
@@ -321,8 +321,8 @@ void VoxelChunk::generateEdge1D(int facing){
 			// read the index from the base.
 			int ind0 = readVertexIndex(*px, *py, *pz);
 
-			int ind1 = edgeDescC0->readIndex2D(incr * 2, VoxelConstants::UsableRange * 2 - 1);
-			int ind2 = edgeDescC1->readIndex2D(VoxelConstants::UsableRange * 2 - 1, incr * 2);
+			int ind1 = edgeDescC0->readIndex2D(incr * 2, VoxelConstants::UsableRange * 2 - 1 , 1);
+			int ind2 = edgeDescC1->readIndex2D(VoxelConstants::UsableRange * 2 - 1, incr * 2, 1);
 
 			// this time we need to wind 2 triangles, or a quad.
 			if (zmin == 0){
@@ -374,8 +374,8 @@ void VoxelChunk::createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, i
 		if (type == 0){
 			int usableRangeMinusOne = VoxelConstants::UsableRange * 2 - 1;
 			for (int c0 = 0; c0 < VoxelConstants::UsableRange * 2; c0++){
-				edgeDesc->writeAdjIndex(c0, 1, left->readIndex2D(usableRangeMinusOne, c0));
-				edgeDesc->writeAdjIndex(c0, 2, right->readIndex2D(c0, usableRangeMinusOne));
+				//edgeDesc->writeAdjIndex(c0, 1, left->readIndex2D(usableRangeMinusOne, c0));
+				//edgeDesc->writeAdjIndex(c0, 2, right->readIndex2D(c0, usableRangeMinusOne));
 			}
 		}
 		for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
@@ -452,7 +452,12 @@ void VoxelChunk::createEdgeDesc2DUni(int lodDiff, int loc0, int loc1, VoxelChunk
 				else if (facing == 1)adjUsableIndex = calcUsableIndex(c0, VoxelConstants::UsableRange - 1, c1);
 				else if (facing == 2)adjUsableIndex = calcUsableIndex(c0, c1, VoxelConstants::UsableRange - 1);
 
-				edgeDesc->writeBaseIndex2D(c0, c1, adjChunk->indexMap[adjUsableIndex]);
+				int indexValue = adjChunk->indexMap[adjUsableIndex];
+				//edgeDesc->writeBaseIndex2D(c0, c1, );
+				edgeDesc->writeIndex2D(c0 * 2, c1 * 2, 0, indexValue);
+				edgeDesc->writeIndex2D(c0 * 2 + 1, c1 * 2, 0, indexValue);
+				edgeDesc->writeIndex2D(c0 * 2, c1 * 2 + 1, 0, indexValue);
+				edgeDesc->writeIndex2D(c0 * 2 + 1, c1 * 2 + 1, 0, indexValue);
 			}
 		}
 	}
@@ -495,7 +500,7 @@ void VoxelChunk::createEdgeDesc2DUni(int lodDiff, int loc0, int loc1, VoxelChunk
 			vec3 normal = tempNormals[vidx];
 			adjChunk->tempNormals.push_back(normal);
 			// step 2: then store the index in the edge desc structure.
-			edgeDesc->writeIndex2D(c0 + loc0 * VoxelConstants::UsableRange, c1 + loc1 * VoxelConstants::UsableRange, vertIncre);
+			edgeDesc->writeIndex2D(c0 + loc0 * VoxelConstants::UsableRange, c1 + loc1 * VoxelConstants::UsableRange, 1, vertIncre);
 			vertIncre++;
 			
 			// now we copy the edge flags.

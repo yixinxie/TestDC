@@ -36,7 +36,7 @@ void main(void){
 	
 	if(true){
 		SF_Box sampler;// = new SF_Box();
-		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 5.5f, 5.5f));
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 3.5f, 5.5f));
 		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
 
 
@@ -117,20 +117,20 @@ void main(void){
 		{
 			chunk0 = vm.readChunk(4, 4, 0, 0);
 			chunk1 = vm.readChunk(4, 4, 2, 0);
-			chunk0->createEdgeDesc1D(-1, 0, base, 5);
-			chunk1->createEdgeDesc1D(-1, 1, base, 5);
+			//chunk0->createEdgeDesc1D(-1, 0, base, 5);
+			//chunk1->createEdgeDesc1D(-1, 1, base, 5);
 		}
 		{
 			chunk0 = vm.readChunk(0, 4, 4, 0);
 			chunk1 = vm.readChunk(2, 4, 4, 0);
-			chunk0->createEdgeDesc1D(-1, 0, base, 3);
-			chunk1->createEdgeDesc1D(-1, 1, base, 3);
+			//chunk0->createEdgeDesc1D(-1, 0, base, 3);
+			//chunk1->createEdgeDesc1D(-1, 1, base, 3);
 		}
 		{
 			chunk0 = vm.readChunk(4, 0, 4, 0);
 			chunk1 = vm.readChunk(4, 2, 4, 0);
-			chunk0->createEdgeDesc1D(-1, 0, base, 4);
-			chunk1->createEdgeDesc1D(-1, 1, base, 4);
+			//chunk0->createEdgeDesc1D(-1, 0, base, 4);
+			//chunk1->createEdgeDesc1D(-1, 1, base, 4);
 		}
 
 		/*VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);

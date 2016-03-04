@@ -1,29 +1,25 @@
-#include "VoxelChunkEdgeDesc.h"
+#include "VoxelChunkTransitionSurfaceDesc.h"
 #include "VoxelChunk.h"
-VoxelChunkEdgeDesc::VoxelChunkEdgeDesc() : indexMap(nullptr), baseIndexMap(nullptr), seamEdges(nullptr), lodDiff(-1){
+VoxelChunkTransitionSurfaceDesc::VoxelChunkTransitionSurfaceDesc() : indexMap(nullptr), baseIndexMap(nullptr), seamEdges(nullptr){
+	initialized = false;
 }
-VoxelChunkEdgeDesc::~VoxelChunkEdgeDesc(){
+VoxelChunkTransitionSurfaceDesc::~VoxelChunkTransitionSurfaceDesc(){
 	if(indexMap != nullptr)delete indexMap;
 	if (baseIndexMap != nullptr)delete baseIndexMap;
 	if (seamEdges != nullptr)delete seamEdges;
 }
-void VoxelChunkEdgeDesc::init(int thisLod, int adjLod){
-
-	if (thisLod == adjLod - 1){
-		dimInCells = VoxelChunk::UsableRange * 2;
+//
+void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff, int type){
+	dimInCells = VoxelChunk::UsableRange * 2;
+	initialized = true;
+	if (_lodDiff == -1){
 		vertScale = 0.5f;
-		lodDiff = 2;
-
 	}
-	else if (thisLod == adjLod){
-		dimInCells = VoxelChunk::UsableRange;
+	else if (_lodDiff == 0){
 		vertScale = 1;
-		lodDiff = 1;
 	}
-	else if (thisLod == adjLod + 1){
-		dimInCells = VoxelChunk::UsableRange / 2;
+	else if (_lodDiff == 1){
 		vertScale = 2;
-		lodDiff = 0;
 	}
 	else{
 		printf_s("irregular lod adjacency detected!\n");
@@ -47,7 +43,7 @@ void VoxelChunkEdgeDesc::init(int thisLod, int adjLod){
 	memset(seamEdges, -1, len);
 }
 
-void VoxelChunkEdgeDesc::gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
 	// now we read the four vertex indices from the table in edge desc.
 	int ind1 = getVertexIndex(x, y);
 	int ind2 = getVertexIndex(x, y - 1); // ifs
@@ -65,10 +61,9 @@ void VoxelChunkEdgeDesc::gen2D_x_tri(int x, int y, std::vector<unsigned int>* te
 		tempIndices->push_back(ind0);
 		tempIndices->push_back(ind1);
 		tempIndices->push_back(ind2);
-		
 	}
 }
-void VoxelChunkEdgeDesc::gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
 	
 	int ind1 = getVertexIndex(x, y);
 	int ind2 = getVertexIndex(x, y - 1);
@@ -97,7 +92,7 @@ void VoxelChunkEdgeDesc::gen2D_x_quad(int x, int y, std::vector<unsigned int>* t
 }
 
 
-void VoxelChunkEdgeDesc::gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2D_y_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted){
 	int ind1 = getVertexIndex(x, y);
 	int ind2 = getVertexIndex(x - 1, y);
 
@@ -116,7 +111,7 @@ void VoxelChunkEdgeDesc::gen2D_y_tri(int x, int y, std::vector<unsigned int>* te
 
 	}
 }
-void VoxelChunkEdgeDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted){
 
 	int ind1 = getVertexIndex(x, y);
 	int ind2 = getVertexIndex(x - 1, y);
@@ -142,7 +137,7 @@ void VoxelChunkEdgeDesc::gen2D_y_quad(int x, int y, std::vector<unsigned int>* t
 		tempIndices->push_back(ind1);
 	}
 }
-void VoxelChunkEdgeDesc::gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted){
+void VoxelChunkTransitionSurfaceDesc::gen2DUni(std::vector<unsigned int>* tempIndices, bool inverted){
 	for (int y = 1; y < dimInCells; y++){
 		for (int x = 0; x < dimInCells; x++){
 			int baseX = x >> 1, baseY = y >> 1;

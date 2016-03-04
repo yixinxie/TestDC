@@ -69,11 +69,11 @@
     <ClCompile Include="DCT3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VoxelChunkEdgeDesc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Orihsay\misc\Timer.cpp">
       <Filter>Source Files\external</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelChunkTransitionSurfaceDesc.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -122,11 +122,11 @@
     <ClInclude Include="DCT3D.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="VoxelChunkEdgeDesc.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Orihsay\misc\Timer.h">
       <Filter>Source Files\external</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelChunkTransitionSurfaceDesc.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

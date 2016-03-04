@@ -1,6 +1,6 @@
 #pragma once
 #include "VoxelData.h"
-#include "VoxelChunkEdgeDesc.h"
+#include "VoxelChunkTransitionSurfaceDesc.h"
 #include <vector>
 #include <glm/glm.hpp>
 #include "qef.h"
@@ -26,7 +26,7 @@ private:
 	int indexMap[UsableRange * UsableRange * UsableRange];
 	// this can be optimized to use only 3 * 3 * UsableRange ^ 2 chars.
 	char edgeMap[UsableRange * UsableRange * UsableRange * 3];
-	VoxelChunkEdgeDesc edgeDescs[7];
+	VoxelChunkTransitionSurfaceDesc edgeDescs[7];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
@@ -76,7 +76,7 @@ private:
 	
 	void generateEdge1D(int facing);
 
-	void gen2DUni(VoxelChunkEdgeDesc* edgeDesc, int dim);
+	void gen2DUni(VoxelChunkTransitionSurfaceDesc* edgeDesc, int dim);
 	
 public:
 
@@ -95,9 +95,8 @@ public:
 	
 	// experimental
 	
-	void setAdjacentLod(int faceId, int alod);
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
-	void createEdgeDesc1D(int thisLod, int loc0, VoxelChunk* adjChunk, int adjLod, int facing);
+	void createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, int facing);
 
-	void createEdgeDesc2DUni(const int thisLod, const int loc0, const int loc1, VoxelChunk* adjChunk, const int adjLod, const int facing);
+	void createEdgeDesc2DUni(const int lodDiff, const int loc0, const int loc1, VoxelChunk* adjChunk, const int facing);
 };

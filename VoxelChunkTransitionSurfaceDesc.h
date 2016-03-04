@@ -8,7 +8,7 @@ this class contains the data that describe how a chunk should generate vertices
 to cover up the seam with a neighbour chunk.
 a regular voxel chunk should have 7 of this.
 */
-class VoxelChunkEdgeDesc{
+class VoxelChunkTransitionSurfaceDesc{
 private:
 	int dimInCells;
 public:
@@ -41,14 +41,13 @@ public:
 		int edgeCellIndex = calcIndex(x, y);
 		return indexMap[edgeCellIndex];
 	}
-	inline int getDim(void){ return dimInCells; }
 
 	float vertScale;
-	int lodDiff;
-	VoxelChunkEdgeDesc(void);
-	~VoxelChunkEdgeDesc();
+	bool initialized;
+	VoxelChunkTransitionSurfaceDesc(void);
+	~VoxelChunkTransitionSurfaceDesc();
 
-	void init(int thisLod, int adjLod);
+	void init(int lodDiff, int type);
 
 	void gen2D_x_tri(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, bool inverted);
 	void gen2D_x_quad(int x, int y, std::vector<unsigned int>* tempIndices, int ind0, int ind3, bool inverted);

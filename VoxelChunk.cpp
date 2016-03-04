@@ -83,9 +83,6 @@ void VoxelChunk::writeRaw(int x, int y, int z, const VoxelData& vData){
 	_data[idx].normal[2] = vData.normal[2];
 
 }
-void VoxelChunk::setAdjacentLod(int faceId, int alod){
-	edgeDescs[faceId].init(faceId, alod);
-}
 /*
 we would like to experiment with a method that attempts to solve the seams between different lod chunks.
 we need to first separate the generation of vertices and indices(quads) into two phases.
@@ -296,11 +293,11 @@ void VoxelChunk::generateEdge1D(int facing){
 		3, 1, 2,
 		4, 2, 0,
 	};
-	VoxelChunkEdgeDesc* edgeDescHinge = &edgeDescs[mapping[facing * 3 + 0]];
-	VoxelChunkEdgeDesc* edgeDescC0 = &edgeDescs[mapping[facing * 3 + 2]];
-	VoxelChunkEdgeDesc* edgeDescC1 = &edgeDescs[mapping[facing * 3 + 1]];
+	VoxelChunkTransitionSurfaceDesc* edgeDescHinge = &edgeDescs[mapping[facing * 3 + 0]];
+	VoxelChunkTransitionSurfaceDesc* edgeDescC0 = &edgeDescs[mapping[facing * 3 + 2]];
+	VoxelChunkTransitionSurfaceDesc* edgeDescC1 = &edgeDescs[mapping[facing * 3 + 1]];
 	
-	if (edgeDescHinge->lodDiff != -1 && edgeDescC0->lodDiff != -1 && edgeDescC1->lodDiff != -1){
+	if (edgeDescHinge->initialized && edgeDescC0->initialized && edgeDescC1->initialized){
 		int incr = 0;
 		int usableRangeMinusOne = UsableRange - 1;
 		int* px;
@@ -360,15 +357,17 @@ void VoxelChunk::generateEdge1D(int facing){
 }
 
 // to generate the 1D seam edge desc, we need to specify which of the three seams
-// we define 3 being the edge that's parallel to the x axis, and so on.
+// we define 3 being the edge that's parallel to the x axis,
+// 4: parallel to the y axis
+// 5: parallel to the z axis
 
-void VoxelChunk::createEdgeDesc1D(int thisLod, int loc0, VoxelChunk* adjChunk, int adjLod, int facing){
+void VoxelChunk::createEdgeDesc1D(int lodDiff, int loc0, VoxelChunk* adjChunk, int facing){
 	// this value should be derived from the positions and lod values of the two chunks.
 	const int mapping[3] = { 0, 1, 2};
-	VoxelChunkEdgeDesc* edgeDesc;
+	VoxelChunkTransitionSurfaceDesc* edgeDesc;
 	edgeDesc = &(adjChunk->edgeDescs[facing]);
-	if (edgeDesc->lodDiff == -1){
-		edgeDesc->init(thisLod, adjLod);
+	if (edgeDesc->initialized == false){
+		edgeDesc->init(lodDiff, 1);
 	}
 
 	vec3 vertTranslate;
@@ -417,14 +416,14 @@ void VoxelChunk::createEdgeDesc1D(int thisLod, int loc0, VoxelChunk* adjChunk, i
 	}
 }
 
-void VoxelChunk::createEdgeDesc2DUni(int thisLod, int loc0, int loc1, VoxelChunk* adjChunk, int adjLod, int facing)
+void VoxelChunk::createEdgeDesc2DUni(int lodDiff, int loc0, int loc1, VoxelChunk* adjChunk, int facing)
 {
 	// this value should be derived from the positions and lod values of the two chunks.
 	const int mapping[6] = { 2, 1, 0, 2, 0, 1 };
-	VoxelChunkEdgeDesc* edgeDesc;
+	VoxelChunkTransitionSurfaceDesc* edgeDesc;
 	edgeDesc = &(adjChunk->edgeDescs[facing]);
-	if (edgeDesc->lodDiff == -1){
-		edgeDesc->init(thisLod, adjLod);
+	if (edgeDesc->initialized == false){
+		edgeDesc->init(lodDiff, 0);
 
 		// copy the original index from the adjacent chunk to the edge desc structure.
 		for (int c1 = 0; c1 < UsableRange; c1++){
@@ -488,7 +487,5 @@ void VoxelChunk::createEdgeDesc2DUni(int thisLod, int loc0, int loc1, VoxelChunk
 			edgeDesc->seamEdges[idx * 2] = edgeMap[usableIndex * 3 + mapping[facing * 2]];
 			edgeDesc->seamEdges[idx * 2 + 1] = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
 		}
-		
 	}
-
 }

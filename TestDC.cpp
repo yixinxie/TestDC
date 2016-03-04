@@ -88,49 +88,49 @@ void main(void){
 			chunk1 = vm.readChunk(4, 0, 2, 0);
 			chunk2 = vm.readChunk(4, 2, 0, 0);
 			chunk3 = vm.readChunk(4, 2, 2, 0);
-			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 0);
-			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 0);
-			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 0);
-			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 0);
+			chunk0->createEdgeDesc2DUni(-1, 0, 0, base, 0);
+			chunk1->createEdgeDesc2DUni(-1, 1, 0, base, 0);
+			chunk2->createEdgeDesc2DUni(-1, 0, 1, base, 0);
+			chunk3->createEdgeDesc2DUni(-1, 1, 1, base, 0);
 		}
 		{
 			chunk0 = vm.readChunk(0, 4, 0, 0);
 			chunk1 = vm.readChunk(2, 4, 0, 0);
 			chunk2 = vm.readChunk(0, 4, 2, 0);
 			chunk3 = vm.readChunk(2, 4, 2, 0);
-			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 1);
-			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 1);
-			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 1);
-			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 1);
+			chunk0->createEdgeDesc2DUni(-1, 0, 0, base, 1);
+			chunk1->createEdgeDesc2DUni(-1, 1, 0, base, 1);
+			chunk2->createEdgeDesc2DUni(-1, 0, 1, base, 1);
+			chunk3->createEdgeDesc2DUni(-1, 1, 1, base, 1);
 		}
 		{
 			chunk0 = vm.readChunk(0, 0, 4, 0);
 			chunk1 = vm.readChunk(2, 0, 4, 0);
 			chunk2 = vm.readChunk(0, 2, 4, 0);
 			chunk3 = vm.readChunk(2, 2, 4, 0);
-			chunk0->createEdgeDesc2DUni(0, 0, 0, base, 1, 2);
-			chunk1->createEdgeDesc2DUni(0, 1, 0, base, 1, 2);
-			chunk2->createEdgeDesc2DUni(0, 0, 1, base, 1, 2);
-			chunk3->createEdgeDesc2DUni(0, 1, 1, base, 1, 2);
+			chunk0->createEdgeDesc2DUni(-1, 0, 0, base, 2);
+			chunk1->createEdgeDesc2DUni(-1, 1, 0, base, 2);
+			chunk2->createEdgeDesc2DUni(-1, 0, 1, base, 2);
+			chunk3->createEdgeDesc2DUni(-1, 1, 1, base, 2);
 		}
 		// hinges
 		{
 			chunk0 = vm.readChunk(4, 4, 0, 0);
 			chunk1 = vm.readChunk(4, 4, 2, 0);
-			chunk0->createEdgeDesc1D(0, base, 0, 1, 5);
-			chunk1->createEdgeDesc1D(0, base, 1, 1, 5);
+			chunk0->createEdgeDesc1D(-1, 0, base, 5);
+			chunk1->createEdgeDesc1D(-1, 1, base, 5);
 		}
 		{
 			chunk0 = vm.readChunk(0, 4, 4, 0);
 			chunk1 = vm.readChunk(2, 4, 4, 0);
-			chunk0->createEdgeDesc1D(0, base, 0, 1, 3);
-			chunk1->createEdgeDesc1D(0, base, 1, 1, 3);
+			chunk0->createEdgeDesc1D(-1, 0, base, 3);
+			chunk1->createEdgeDesc1D(-1, 1, base, 3);
 		}
 		{
 			chunk0 = vm.readChunk(4, 0, 4, 0);
 			chunk1 = vm.readChunk(4, 2, 4, 0);
-			chunk0->createEdgeDesc1D(0, base, 0, 1, 4);
-			chunk1->createEdgeDesc1D(0, base, 1, 1, 4);
+			chunk0->createEdgeDesc1D(-1, 0, base, 4);
+			chunk1->createEdgeDesc1D(-1, 1, base, 4);
 		}
 
 		/*VoxelChunk* leftTop = vm.readChunk(0, 4, 0, 0);

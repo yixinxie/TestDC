@@ -67,10 +67,8 @@ private:
 			accumNormal += _vdat->normal[2];
 		}
 	}
-	
-	void generateEdge1D(int facing);
-
-	void gen2DUni(VoxelChunkTransitionSurfaceDesc* edgeDesc, int dim);
+	void duplicateIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
+	void copyIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
 	
 public:
 
@@ -92,5 +90,5 @@ public:
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 	void createEdgeDesc1D(const int lodDiff, const int loc0, VoxelChunk* adjChunk, const int facing);
 
-	void createEdgeDesc2DUni(const int lodDiff, const int loc0, const int loc1, VoxelChunk* adjChunk, const int facing);
+	void createEdgeDesc2D(const int lodDiff, const int loc0, const int loc1, VoxelChunk* adjChunk, const int facing);
 };

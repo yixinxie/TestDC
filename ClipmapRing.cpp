@@ -24,17 +24,16 @@ void ClipmapRing::initPos(ivec3 _pos, ivec3 _innerPos, int _lod){
 		}
 	}
 	start = ivec3(0, 0, 0);
-	innerPos = _innerPos;
 }
 void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos){
 	
-	ivec3 origin = ring[calcRingIndex(start.x, start.y, start.z)].pos;
+	ivec3 origin = ring[calcRingIndex(start.x,start.y, start.z)].pos;
 	ivec3 diff = _pos - origin;
 	// we expect the values in diff should be either zero, or unitSize
 	ivec3 normalizedDiff = diff / unitSize;
-	ivec3 newStart = start + normalizedDiff;
-	int claimCount = 0;
-	int releaseCount = 0;
+	start += normalizedDiff;
+	ivec3 start = ivec3_mod(start, RING_DIM);
+
 	//int z = 0; {
 	for (int z = 0; z < RING_DIM; z++){
 		for (int y = 0; y < RING_DIM; y++){
@@ -42,10 +41,8 @@ void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos){
 
 				ivec3 thisPos = _pos + ivec3(x, y, z) * unitSize;
 				// find the corresponding node.
-				int nx = (x + newStart.x) % RING_DIM;
-				int ny = (y + newStart.y) % RING_DIM;
-				int nz = (z + newStart.z) % RING_DIM;
-				int idx = calcRingIndex(nx, ny, nz);
+				ivec3 nxyz = ivec3_mod(ivec3(x + start.x, y + start.y, z + start.z), RING_DIM);
+				int idx = calcRingIndex(nxyz.x, nxyz.y, nxyz.z);
 				ivec3 posFromNode = ring[idx].pos;
 				if (belongsTo(thisPos, _pos, _innerPos))
 				{
@@ -65,7 +62,6 @@ void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos){
 						printf_s("claim %d, %d, %d\n", thisPos.x, thisPos.y, thisPos.z);
 						ring[idx].activated = 1;
 						ring[idx].pos = thisPos;
-						claimCount++;
 					}
 				}
 				else
@@ -73,18 +69,11 @@ void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos){
 					if (ring[idx].activated == 1){
 						printf_s("release %d, %d, %d\n", thisPos.x, thisPos.y, thisPos.z);
 						ring[idx].activated = 0;
-						releaseCount++;
 					}
 				}
 			}
 		}
 	}
-	origin = _pos;
-	innerPos = _innerPos;
-	start += normalizedDiff;
-	if (releaseCount != claimCount)printf_s("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UNEVEN !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-	
-
 }
 bool ClipmapRing::belongsTo(const ivec3& pos, const ivec3& origin, const ivec3& inner){
 	bool insideCube = false;
@@ -101,4 +90,13 @@ bool ClipmapRing::belongsTo(const ivec3& pos, const ivec3& origin, const ivec3& 
 		insideInnerCube = true;
 	}
 	return insideCube == true && insideInnerCube == false;
+}
+ivec3 ClipmapRing::ivec3_mod(const ivec3& val, const int mod){
+	ivec3 ret = val;
+	ret += mod * 255;
+	ret.x = ret.x % mod;
+	ret.y = ret.y % mod;
+	ret.z = ret.z % mod;
+	return ret;
+
 }

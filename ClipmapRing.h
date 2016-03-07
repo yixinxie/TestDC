@@ -4,8 +4,6 @@
 
 #define RING_DIM 6
 #define INNDER_DIM 3
-// 3 + 1 + 3
-#define LEDGE_DIM 3
 #define CORE_DIM 6
 struct VCNode
 {
@@ -19,13 +17,13 @@ private:
 	int lod;
 	int unitSize;
 	
-	ivec3 innerPos;
 	ivec3 start;
 	VCNode ring[RING_DIM * RING_DIM * RING_DIM];
 	inline int calcRingIndex(int x, int y, int z){
 		return x + y * RING_DIM + z * RING_DIM * RING_DIM;
 	}
-	bool belongsTo(const ivec3& pos, const ivec3& oldOrigin, const ivec3& inner);
+	bool belongsTo(const ivec3& pos, const ivec3& origin, const ivec3& inner);
+	ivec3 ivec3_mod(const ivec3& val, const int mod);
 public:
 	ClipmapRing(void);
 	~ClipmapRing();

@@ -168,7 +168,7 @@ void main(void){
 		ClipmapRing ring;
 		ring.initPos(ivec3(0, 0, 0), ivec3(4, 0, 0), 1);
 		ring.reposition(ivec3(2, 0, 0), ivec3(4, 0, 0));
-		printf_s("-----------------------------------------------\n");
+		printf_s("-----------------------------------------------\n %d", (-5 % 3));
 		//ring.reposition(ivec3(2, 2, 0), ivec3(4, 2, 0));
 	}
 	printf_s("done.");

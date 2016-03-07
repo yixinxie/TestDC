@@ -5,9 +5,11 @@
 #include "VoxelManager.h"
 #include "MeshSerializer.h"
 #include "HeightMapSampler.h"
+#include "ClipmapRing.h"
 #include "DCT.h"
 #include "DCT3D.h"
 #include "Orihsay/misc/Timer.h"
+
 using namespace svd;
 void main(void){
 	if (false){
@@ -34,7 +36,7 @@ void main(void){
 		OctreeNode::generateMinimizers(&root);*/
 	}
 	
-	if(true){
+	if(false){
 		SF_Box sampler;// = new SF_Box();
 		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 3.5f, 5.5f));
 		//((SF_Box*)sampler)->setSpecs(vec3(1.5f, 1.5f, 1.5f), vec3(5.5f, 6.5f, 7.5f));
@@ -161,6 +163,13 @@ void main(void){
 		//dct.quantize(3);
 		dct.decode();
 		printf_s("error: %f", dct.calcError());
+	}
+	if (true){
+		ClipmapRing ring;
+		ring.initPos(ivec3(0, 0, 0), ivec3(4, 0, 0), 1);
+		ring.reposition(ivec3(2, 0, 0), ivec3(4, 0, 0));
+		printf_s("-----------------------------------------------\n");
+		//ring.reposition(ivec3(2, 2, 0), ivec3(4, 2, 0));
 	}
 	printf_s("done.");
 	getchar();

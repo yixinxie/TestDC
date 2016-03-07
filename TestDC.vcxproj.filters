@@ -75,6 +75,9 @@
     <ClCompile Include="VoxelChunkTransitionSurfaceDesc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ClipmapRing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qef.h">
@@ -129,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="VoxelConstants.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClipmapRing.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

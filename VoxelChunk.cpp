@@ -475,7 +475,6 @@ void VoxelChunk::duplicateIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelCh
 
 	int vertIncre = adjChunk->tempVertices.size();
 	int scaler = edgeDesc->getDim() / VoxelConstants::UsableRange;
-	const int mapping[6] = { 2, 1, 0, 2, 0, 1 };
 	for (int c1 = 0; c1 < halfUsableRange; c1++){
 		for (int c0 = 0; c0 < halfUsableRange; c0++){
 			int usableIndex = 0;

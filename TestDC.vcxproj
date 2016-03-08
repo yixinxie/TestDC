@@ -96,6 +96,7 @@
     <ClCompile Include="TestDC.cpp" />
     <ClCompile Include="Visualize.cpp" />
     <ClCompile Include="VoxelChunk.cpp" />
+    <ClCompile Include="VoxelChunkManager.cpp" />
     <ClCompile Include="VoxelChunkTransitionSurfaceDesc.cpp" />
     <ClCompile Include="VoxelData.cpp" />
     <ClCompile Include="VoxelManager.cpp" />
@@ -109,13 +110,16 @@
     <ClInclude Include="DCT.h" />
     <ClInclude Include="DCT3D.h" />
     <ClInclude Include="HeightMapSampler.h" />
+    <ClInclude Include="IVoxelChunkManager.h" />
     <ClInclude Include="MeshSerializer.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="qef.h" />
     <ClInclude Include="SamplerFunction.h" />
     <ClInclude Include="svd.h" />
+    <ClInclude Include="VCNode.h" />
     <ClInclude Include="Visualize.h" />
     <ClInclude Include="VoxelChunk.h" />
+    <ClInclude Include="VoxelChunkManager.h" />
     <ClInclude Include="VoxelChunkTransitionSurfaceDesc.h" />
     <ClInclude Include="VoxelConstants.h" />
     <ClInclude Include="VoxelData.h" />

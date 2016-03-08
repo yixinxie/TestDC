@@ -1,4 +1,5 @@
 #include "VoxelChunk.h"
+#include "IVoxelChunkManager.h"
 #include <unordered_map>
 #define MAX_LOD 3
 struct VoxelChunkNode{
@@ -7,7 +8,7 @@ public:
 	int w; // level of detail
 	VoxelChunk chunk;
 };
-class VoxelManager{
+class VoxelManager : IVoxelChunkManager{
 private:
 	std::unordered_map<int, VoxelChunk*> chunks;
 	int xCount, yCount, zCount; // in # of chunks.
@@ -39,7 +40,6 @@ public:
 	}
 	void write(const VoxelData& vData, const int x, const int y, const int z, const int w = 0);
 	void performSDF(SamplerFunction* sampler);
-	void generateMeshes(void);
 	void generateVertices(void);
 	void generateIndices(void);
 	void exportJson(void);
@@ -48,4 +48,8 @@ public:
 		return chunks.at(key);
 	}
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
+	// interface implementations
+	void createChunk(const ivec3& pos, const int size, VCNode* node);
+	void removeChunk(VCNode* chunk);
+	void relocateChunk(VCNode* chunk, const ivec3& pos);
 };

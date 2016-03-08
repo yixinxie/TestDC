@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "qef.h"
+#include "Orihsay/misc/Timer.h"
 #include "Octree.h"
 #include "VoxelChunk.h"
 #include "VoxelManager.h"
@@ -8,7 +9,7 @@
 #include "ClipmapRing.h"
 #include "DCT.h"
 #include "DCT3D.h"
-#include "Orihsay/misc/Timer.h"
+#include "VoxelChunkManager.h"
 
 using namespace svd;
 void main(void){
@@ -165,9 +166,10 @@ void main(void){
 		printf_s("error: %f", dct.calcError());
 	}
 	if (true){
-		ClipmapRing ring;
+		VoxelChunkManager vcm;
+		ClipmapRing ring(&vcm);
 		ring.initPos(ivec3(0, 0, 0), ivec3(4, 0, 0), 1);
-		ring.reposition(ivec3(2, 0, 0), ivec3(4, 0, 0));
+		ring.update(ivec3(2, 0, 0), ivec3(4, 0, 0));
 		printf_s("-----------------------------------------------\n %d", (-5 % 3));
 		//ring.reposition(ivec3(2, 2, 0), ivec3(4, 2, 0));
 	}

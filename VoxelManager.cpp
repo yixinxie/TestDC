@@ -102,21 +102,6 @@ void VoxelManager::write(const VoxelData& vData, const int x, const int y, const
 	}
 
 }
-void VoxelManager::generateMeshes(){
-	for (auto it = chunks.begin(); it != chunks.end(); it++){
-		int key = it->first;
-		VoxelChunk* voxelChunk = it->second;
-		voxelChunk->generateVertices();
-		voxelChunk->generateIndices();
-		
-		int x, y, z, w;
-		calcChunkXYZW(key, x, y, z, w);
-		char tmp[128];
-		sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d_%d.json", x, y, z, w);
-		VoxelChunk* chunk = chunks.at(key);
-		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
-	}
-}
 void VoxelManager::generateVertices(){
 	for (auto it = chunks.begin(); it != chunks.end(); it++){
 		int key = it->first;
@@ -184,4 +169,12 @@ void VoxelManager::customSDF(int x, int y, int z, int w, SamplerFunction* sample
 	createIfNeeded(key);
 	VoxelChunk* voxelChunk = chunks.at(key);
 	voxelChunk->customSDF(x, y, z, w, sampler);
+}
+void VoxelManager::createChunk(const ivec3& pos, const int size, VCNode* node){
+}
+void VoxelManager::removeChunk(VCNode* chunk){
+
+}
+void VoxelManager::relocateChunk(VCNode* chunk, const ivec3& pos){
+
 }

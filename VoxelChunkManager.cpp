@@ -2,7 +2,7 @@
 VoxelChunkManager::VoxelChunkManager(){
 
 }
-void VoxelChunkManager::createChunk(const ivec3& pos, const int size, VCNode* node){
+void VoxelChunkManager::createChunk(const ivec3& pos, const int lod, VCNode* node){
 }
 void VoxelChunkManager::removeChunk(VCNode* chunk){
 

@@ -8,6 +8,7 @@ ClipmapRing::~ClipmapRing(){
 void ClipmapRing::initPos(ivec3 _pos, ivec3 _innerPos, int _lod){
 	lod = _lod;
 	unitSize = 1 << lod;
+	noInner = false;
 	for (int z = 0; z < RING_DIM; z++){
 		for (int y = 0; y < RING_DIM; y++){
 			for (int x = 0; x < RING_DIM; x++){
@@ -16,17 +17,20 @@ void ClipmapRing::initPos(ivec3 _pos, ivec3 _innerPos, int _lod){
 				ring[idx].pos = thisPos;
 				if (belongsTo(thisPos, _pos, _innerPos)){
 					ring[idx].activated = 1;
-					vcManager->createChunk(ring[idx].pos, unitSize, &ring[idx]);
+					vcManager->createChunk(ring[idx].pos, lod, &ring[idx]);
 				}
 
 			}
 		}
 	}
+	originPos = _pos;
+	innerCubePos = _innerPos;
 	start = ivec3(0, 0, 0);
 }
 void ClipmapRing::initPos(ivec3 _pos, int _lod){
 	lod = _lod;
 	unitSize = 1 << lod;
+	noInner = true;
 	for (int z = 0; z < RING_DIM; z++){
 		for (int y = 0; y < RING_DIM; y++){
 			for (int x = 0; x < RING_DIM; x++){
@@ -35,15 +39,16 @@ void ClipmapRing::initPos(ivec3 _pos, int _lod){
 				ring[idx].pos = thisPos;
 				if (belongsToNoInner(thisPos, _pos)){
 					ring[idx].activated = 1;
-					vcManager->createChunk(ring[idx].pos, unitSize, &ring[idx]);
+					vcManager->createChunk(ring[idx].pos, lod, &ring[idx]);
 				}
 
 			}
 		}
 	}
+	originPos = _pos;
 	start = ivec3(0, 0, 0);
 }
-void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos, bool noInner){
+void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos){
 	
 	ivec3 origin = ring[calcRingIndex(start.x,start.y, start.z)].pos;
 	ivec3 diff = _pos - origin;
@@ -83,7 +88,7 @@ void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos, bool noI
 						printf_s("claim %d, %d, %d\n", thisPos.x, thisPos.y, thisPos.z);
 						ring[idx].activated = 1;
 						ring[idx].pos = thisPos;
-						vcManager->createChunk(thisPos, unitSize, &ring[idx]);
+						vcManager->createChunk(thisPos, lod, &ring[idx]);
 					}
 				}
 				else{
@@ -98,11 +103,14 @@ void ClipmapRing::reposition(const ivec3& _pos, const ivec3& _innerPos, bool noI
 	}
 }
 void ClipmapRing::update(const ivec3& _pos, const ivec3& _innerPos){
-	reposition(_pos, _innerPos, false);
+	reposition(_pos, _innerPos);
+	originPos = _pos;
+	innerCubePos = _innerPos;
 }
 
 void ClipmapRing::update(const ivec3& _pos){
-	reposition(_pos, ivec3(0, 0, 0), true);
+	reposition(_pos, ivec3(0, 0, 0));
+	originPos = _pos;
 }
 bool ClipmapRing::belongsTo(const ivec3& pos, const ivec3& origin, const ivec3& inner){
 	bool insideCube = false;
@@ -137,4 +145,73 @@ ivec3 ClipmapRing::ivec3_mod(const ivec3& val, const int mod){
 	ret.z = ret.z % mod;
 	return ret;
 
+}
+void ClipmapRing::createEdgeDescs(ClipmapRing* inner, ClipmapRing* outter){
+	const ivec3 adjancyInfo[6] = {
+		ivec3(-unitSize, 0, 0), ivec3(0, -unitSize, 0), ivec3(0, 0, -unitSize),
+		ivec3(0, -unitSize, -unitSize), ivec3(-unitSize, 0, -unitSize), ivec3(-unitSize, -unitSize, 0)
+	};
+	for (int z = 0; z < RING_DIM; z++){
+		for (int y = 0; y < RING_DIM; y++){
+			for (int x = 0; x < RING_DIM; x++){
+				bool inRing;
+				ivec3 thisPos = originPos + ivec3(x, y, z) * unitSize;
+				if (noInner)inRing = belongsToNoInner(thisPos, originPos);
+				else inRing = belongsTo(thisPos, originPos, innerCubePos);
+				if (inRing){
+					ivec3 nxyz = ivec3_mod(ivec3(x + start.x, y + start.y, z + start.z), RING_DIM);
+					int idx = calcRingIndex(nxyz.x, nxyz.y, nxyz.z);
+					VoxelChunk* curChunk = ring[idx].chunk;
+					for (int i = 0; i < 6; i++){
+						ivec3 adjPos = ring[idx].pos - adjancyInfo[i];
+						int adjType = adjacencyTypes(adjPos);
+						if (i < 3){
+							if (adjType == 0){
+								// a normal 1 to 1 relationship.
+								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
+								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+							}
+							else if(adjType == 1){
+								// now there are 4 chunks that are adjacent to curChunk.
+								// they lie in the ring inside this clipmap ring.
+								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
+								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+							}
+							else if (adjType == -1){
+								// the adjacent chunk is larger than curChunk.
+								// curChunk only has enough data to describe 1 / 4 of its edge desc.
+								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
+								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+							}
+						}
+						else{
+
+						}
+					}
+				}
+			}
+		}
+	}
+}
+// pos in world space coordinate.
+int ClipmapRing::adjacencyTypes(ivec3 pos){
+	int res = 0;
+	if (pos.x < originPos.x || pos.y < originPos.y || pos.z < originPos.z ||
+		pos.x >= originPos.x + RING_DIM * unitSize ||
+		pos.y >= originPos.y + RING_DIM * unitSize ||
+		pos.z >= originPos.z + RING_DIM * unitSize){
+		res = -1;
+	}
+	if (pos.x >= innerCubePos.x && pos.x < innerCubePos.x + unitSize * INNDER_DIM &&
+		pos.y >= innerCubePos.y && pos.y < innerCubePos.y + unitSize * INNDER_DIM &&
+		pos.z >= innerCubePos.z && pos.z < innerCubePos.z + unitSize * INNDER_DIM){
+		res = 1;
+	}
+	return res;
+}
+VoxelChunk* ClipmapRing::getNodeByCoord(ivec3 pos){
+	ivec3 local = (pos - originPos) / unitSize;
+	ivec3 nxyz = ivec3_mod(local + start, RING_DIM);
+	int idx = calcRingIndex(nxyz.x, nxyz.y, nxyz.z);
+	return ring[idx].chunk;
 }

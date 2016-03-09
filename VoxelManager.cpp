@@ -2,6 +2,22 @@
 #include "MeshSerializer.h"
 #include "Visualize.h"
 #include "VoxelConstants.h"
+VoxelManager::~VoxelManager(){
+	if (rings != nullptr){
+		for (int i = 0; i < ringCount; i++){
+			delete rings[i];
+		}
+		delete rings;
+	}
+	for (auto it = chunks.begin(); it != chunks.end(); it++){
+		int key = it->first;
+		VoxelChunk* voxelChunk = it->second;
+		delete voxelChunk;
+	}
+}
+VoxelManager::VoxelManager() : rings(nullptr), ringCount(0), dataSampler(nullptr){
+
+}
 void VoxelManager::initChunkSize(int _xcount, int _ycount, int _zcount){
 	xCount = _xcount;
 	yCount = _ycount;
@@ -114,7 +130,7 @@ void VoxelManager::generateIndices(){
 		int key = it->first;
 		VoxelChunk* voxelChunk = it->second;
 		voxelChunk->generateIndices();
-}
+	}
 }
 void VoxelManager::exportJson(){
 	for (auto it = chunks.begin(); it != chunks.end(); it++){
@@ -123,7 +139,7 @@ void VoxelManager::exportJson(){
 		calcChunkXYZW(key, x, y, z, w);
 		char tmp[128];
 		sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d_%d.json", x, y, z, w);
-		VoxelChunk* chunk = chunks.at(key);
+		VoxelChunk* chunk = it->second;
 		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
 	}
 }
@@ -157,7 +173,7 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 					);
 				}*/
 				
-				write(voxel, xi, yi, zi);// probably inappropriate but shortcut for now.
+				write(voxel, xi, yi, zi);
 				
 			}
 		}
@@ -166,15 +182,55 @@ void VoxelManager::performSDF(SamplerFunction* sampler){
 
 void VoxelManager::customSDF(int x, int y, int z, int w, SamplerFunction* sampler){
 	int key = calcChunkIndex(x, y, z, w);
-	createIfNeeded(key);
-	VoxelChunk* voxelChunk = chunks.at(key);
+	VoxelChunk* voxelChunk = createIfNeeded(key);
 	voxelChunk->customSDF(x, y, z, w, sampler);
 }
-void VoxelManager::createChunk(const ivec3& pos, const int size, VCNode* node){
+void VoxelManager::createChunk(const ivec3& pos, const int lod, VCNode* node){
+	int cidx = calcChunkIndex(pos.x, pos.y, pos.z, lod);
+	node->chunk = createIfNeeded(cidx);
+
+	node->chunk->customSDF(pos.x, pos.y, pos.z, lod, dataSampler);
 }
 void VoxelManager::removeChunk(VCNode* chunk){
 
 }
 void VoxelManager::relocateChunk(VCNode* chunk, const ivec3& pos){
 
+}
+void VoxelManager::initClipmap(int _ringCount){
+	ringCount = _ringCount;
+	ivec3 observerPos = ivec3(10, 10, 10);
+	rings = new ClipmapRing*[ringCount];
+	ivec3 lastRingPos;
+	int unitSize;
+	for (int i = 0; i < ringCount; i++){
+		rings[i] = new ClipmapRing(this);
+		
+		if (i == 0){
+			rings[i]->initPos(observerPos, i);
+			lastRingPos = observerPos;
+		}
+		else{
+			unitSize = 1 << i;
+			// the value 2 below somewhat indicates which of the eight corners that the L-shape structure is in.
+			ivec3 thisRingPos = lastRingPos - unitSize * 2;
+			rings[i]->initPos(thisRingPos, lastRingPos, i);
+			lastRingPos = thisRingPos;
+		}
+	}
+}
+void VoxelManager::createEdgeDescs(){
+	for (int i = 0; i < ringCount; i++){
+		ClipmapRing* ring = rings[i];
+		
+	}
+	for (auto it = chunks.begin(); it != chunks.end(); it++){
+		int key = it->first;
+		int x, y, z, w;
+		calcChunkXYZW(key, x, y, z, w);
+		VoxelChunk* chunk = it->second;
+		// find the x-negative chunk(s).
+	
+
+	}
 }

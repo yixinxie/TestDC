@@ -166,8 +166,22 @@ void main(void){
 		printf_s("error: %f", dct.calcError());
 	}
 	if (true){
-		VoxelChunkManager vcm;
-		ClipmapRing ring(&vcm);
+		SF_Box sampler;// = new SF_Box();
+		sampler.setSpecs(vec3(0.5f, 0.5f, 0.5f), vec3(5.5f, 3.5f, 5.5f));
+
+		VoxelManager vm;
+		vm.initChunkSize(12, 12, 12);
+		vm.dataSampler = &sampler;
+		// also do the data sampling
+		vm.initClipmap(2);
+		vm.generateVertices();
+		// create edge descs
+		vm.createEdgeDescs();
+		vm.generateIndices();
+		vm.exportJson();
+	}
+	if (false){
+		ClipmapRing ring(nullptr);
 		ring.initPos(ivec3(0, 0, 0), ivec3(4, 0, 0), 1);
 		ring.update(ivec3(2, 0, 0), ivec3(4, 0, 0));
 		printf_s("-----------------------------------------------\n %d", (-5 % 3));

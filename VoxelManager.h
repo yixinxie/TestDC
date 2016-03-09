@@ -1,15 +1,13 @@
+#pragma once
+#include <unordered_map>
 #include "VoxelChunk.h"
 #include "IVoxelChunkManager.h"
-#include <unordered_map>
+#include "ClipmapRing.h"
 #define MAX_LOD 3
-struct VoxelChunkNode{
-public:
-	int x, y, z;
-	int w; // level of detail
-	VoxelChunk chunk;
-};
-class VoxelManager : IVoxelChunkManager{
+class VoxelManager : public IVoxelChunkManager{
 private:
+	ClipmapRing** rings;
+	int ringCount;
 	std::unordered_map<int, VoxelChunk*> chunks;
 	int xCount, yCount, zCount; // in # of chunks.
 	int worldBoundX, worldBoundY, worldBoundZ;
@@ -24,20 +22,28 @@ private:
 		y = xy / xCount;
 		x = xy - y * xCount;
 	}
-	inline void createIfNeeded(int chunkIndex){
-		VoxelChunk* voxelChunk = new VoxelChunk;
+	inline VoxelChunk* createIfNeeded(int chunkIndex){
+		VoxelChunk* voxelChunk = nullptr;
 		auto it = chunks.find(chunkIndex);
-		if (it == chunks.end())
+		if (it == chunks.end()){
+			voxelChunk = new VoxelChunk();
 			chunks.insert({ chunkIndex, voxelChunk });
+		}
+		else{
+			voxelChunk = it->second;
+		}
+		return voxelChunk;
+
 	}
 	void zeroChunkPointers(void);
 public:
-	VoxelManager(void){
-	}
+	SamplerFunction* dataSampler;
+	VoxelManager(void);
+	~VoxelManager();
 	void initChunkSize(int _xcount, int _ycount, int _zcount);
 	void initWorldSize(int _sizeX, int _sizeY, int _sizeZ);
-	~VoxelManager(){
-	}
+	void initClipmap(int ringCount);
+	
 	void write(const VoxelData& vData, const int x, const int y, const int z, const int w = 0);
 	void performSDF(SamplerFunction* sampler);
 	void generateVertices(void);
@@ -49,7 +55,9 @@ public:
 	}
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 	// interface implementations
-	void createChunk(const ivec3& pos, const int size, VCNode* node);
+	void createChunk(const ivec3& pos, const int lod, VCNode* node);
 	void removeChunk(VCNode* chunk);
 	void relocateChunk(VCNode* chunk, const ivec3& pos);
+	void createEdgeDescs(void);
+	
 };

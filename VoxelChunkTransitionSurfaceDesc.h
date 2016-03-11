@@ -42,10 +42,10 @@ private:
 	int* indexMap;
 	char* seamEdges;
 public:
-	
-	inline void writeIndex(int x, int index){
-		indexMap[x] = index;
-	}
+	//
+	//inline void writeIndex(int x, int index){
+	//	indexMap[x] = index;
+	//}
 	inline char readSeamEdge(int x, int y){
 		return seamEdges[calcIndex(x, y)];
 	}
@@ -92,8 +92,8 @@ public:
 	VoxelChunkTransitionSurfaceDesc(void);
 	~VoxelChunkTransitionSurfaceDesc();
 
-	void init(int lodDiff, int type);
-	void init1D(int lodDiff, VoxelChunkTransitionSurfaceDesc* left, VoxelChunkTransitionSurfaceDesc* right);
+	void init(int _lodDiff);
+	void init1D(int _lodDiff, VoxelChunkTransitionSurfaceDesc* left, VoxelChunkTransitionSurfaceDesc* right);
 
 	void gen2D(std::vector<unsigned int>* tempIndices, bool inverted);
 

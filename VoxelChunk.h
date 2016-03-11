@@ -20,7 +20,7 @@ private:
 	int indexMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange];
 	// this can be optimized to use only 3 * 3 * VoxelConstants::UsableRange ^ 2 chars.
 	char edgeMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange * 3];
-	VoxelChunkTransitionSurfaceDesc edgeDescs[7];
+	VoxelChunkTransitionSurfaceDesc edgeDescs[6];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
 	std::vector<unsigned int> tempIndices;
@@ -67,13 +67,14 @@ private:
 			accumNormal += _vdat->normal[2];
 		}
 	}
+	// helper functions for createEdgeDesc2D
 	void duplicateIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
 	void copyIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
 	
 public:
 
 	VoxelChunk(void);
-	~VoxelChunk(){ if (_data != nullptr) delete _data; };
+	~VoxelChunk();
 	void performSDF(SamplerFunction* sf);
 
 	void createDataArray(void);

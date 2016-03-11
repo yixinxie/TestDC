@@ -127,12 +127,20 @@ void VoxelManager::generateVertices(){
 }
 void VoxelManager::generateIndices(){
 	for (auto it = chunks.begin(); it != chunks.end(); it++){
-		int key = it->first;
+		{
+			int key = it->first;
+			int x, y, z, w;
+			calcChunkXYZW(key, x, y, z, w);
+			int sdf = 0;
+		}
+
 		VoxelChunk* voxelChunk = it->second;
 		voxelChunk->generateIndices();
 	}
 }
 void VoxelManager::exportJson(){
+	vector<string> fileNames;
+	vector<ivec4> coords;
 	for (auto it = chunks.begin(); it != chunks.end(); it++){
 		int key = it->first;
 		int x, y, z, w;
@@ -141,7 +149,11 @@ void VoxelManager::exportJson(){
 		sprintf_s(tmp, sizeof(tmp), "dcchunks_%d_%d_%d_%d.json", x, y, z, w);
 		VoxelChunk* chunk = it->second;
 		MeshSerializer::serialize(tmp, chunk->getVertices(), chunk->getIndices(), chunk->getNormals());
+
+		fileNames.push_back(tmp);
+		coords.push_back(ivec4(x, y, z, w));
 	}
+	MeshSerializer::serializeIndexFile("dcchunks_index.json", fileNames, coords);
 }
 void VoxelManager::performSDF(SamplerFunction* sampler){
 	const ivec3 minBound = sampler->getMinBound();

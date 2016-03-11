@@ -146,8 +146,8 @@ ivec3 ClipmapRing::ivec3_mod(const ivec3& val, const int mod){
 	return ret;
 
 }
-void ClipmapRing::createEdgeDescs(ClipmapRing* inner, ClipmapRing* outter){
-	const ivec3 adjancyInfo[6] = {
+void ClipmapRing::createEdgeDescs(ClipmapRing* innerRing, ClipmapRing* outterRing){
+	const ivec3 adjacencyInfo[6] = {
 		ivec3(-unitSize, 0, 0), ivec3(0, -unitSize, 0), ivec3(0, 0, -unitSize),
 		ivec3(0, -unitSize, -unitSize), ivec3(-unitSize, 0, -unitSize), ivec3(-unitSize, -unitSize, 0)
 	};
@@ -163,25 +163,32 @@ void ClipmapRing::createEdgeDescs(ClipmapRing* inner, ClipmapRing* outter){
 					int idx = calcRingIndex(nxyz.x, nxyz.y, nxyz.z);
 					VoxelChunk* curChunk = ring[idx].chunk;
 					for (int i = 0; i < 6; i++){
-						ivec3 adjPos = ring[idx].pos - adjancyInfo[i];
+						ivec3 adjPos = ring[idx].pos + adjacencyInfo[i];
 						int adjType = adjacencyTypes(adjPos);
 						if (i < 3){
 							if (adjType == 0){
 								// a normal 1 to 1 relationship.
-								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
-								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+								const VCNode* adjNode = getNodeByCoord(adjPos);
+								curChunk->createEdgeDesc2D(adjType, 0, 0, adjNode->chunk, i);
 							}
 							else if(adjType == 1){
 								// now there are 4 chunks that are adjacent to curChunk.
 								// they lie in the ring inside this clipmap ring.
-								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
-								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+								VCNode node0, node1, node2, node3;
+								innerRing->getNodesFromInner(adjPos, i, &node0, &node1, &node2, &node3);
+								curChunk->createEdgeDesc2D(adjType, 0, 0, node0.chunk, i);
+								curChunk->createEdgeDesc2D(adjType, 1, 0, node1.chunk, i);
+								curChunk->createEdgeDesc2D(adjType, 0, 1, node2.chunk, i);
+								curChunk->createEdgeDesc2D(adjType, 1, 1, node3.chunk, i);
 							}
 							else if (adjType == -1){
 								// the adjacent chunk is larger than curChunk.
 								// curChunk only has enough data to describe 1 / 4 of its edge desc.
-								VoxelChunk* adjChunk = getNodeByCoord(adjPos);
-								curChunk->createEdgeDesc2D(adjType, 0, 0, adjChunk, i);
+								ivec3 local = ivec3_mod(adjPos, unitSize);
+								ivec3 tempAdjPos = adjPos - local;
+								const VCNode* adjNode = outterRing->getNodeByCoord(tempAdjPos);
+								if ( i == 0)
+									curChunk->createEdgeDesc2D(adjType, local.z, local.y, adjNode->chunk, i);
 							}
 						}
 						else{
@@ -200,18 +207,36 @@ int ClipmapRing::adjacencyTypes(ivec3 pos){
 		pos.x >= originPos.x + RING_DIM * unitSize ||
 		pos.y >= originPos.y + RING_DIM * unitSize ||
 		pos.z >= originPos.z + RING_DIM * unitSize){
-		res = -1;
+		res = -1; // outside
 	}
 	if (pos.x >= innerCubePos.x && pos.x < innerCubePos.x + unitSize * INNDER_DIM &&
 		pos.y >= innerCubePos.y && pos.y < innerCubePos.y + unitSize * INNDER_DIM &&
 		pos.z >= innerCubePos.z && pos.z < innerCubePos.z + unitSize * INNDER_DIM){
-		res = 1;
+		res = 1; // inside
 	}
 	return res;
 }
-VoxelChunk* ClipmapRing::getNodeByCoord(ivec3 pos){
+const VCNode* ClipmapRing::getNodeByCoord(ivec3 pos){
 	ivec3 local = (pos - originPos) / unitSize;
 	ivec3 nxyz = ivec3_mod(local + start, RING_DIM);
 	int idx = calcRingIndex(nxyz.x, nxyz.y, nxyz.z);
-	return ring[idx].chunk;
+	return &ring[idx];
+}
+// dir being 0, 1 or 2.
+void ClipmapRing::getNodesFromInner(ivec3 pos, int dir, VCNode* _node0, VCNode* _node1, VCNode* _node2, VCNode* _node3){
+	const ivec3 offsets[] = {
+		ivec3(unitSize, 0, 0), ivec3(unitSize, 0, unitSize), ivec3(unitSize, unitSize, 0), ivec3(unitSize, unitSize, unitSize),
+
+		ivec3(0, unitSize, 0), ivec3(unitSize, unitSize, 0), ivec3(0, unitSize, unitSize), ivec3(unitSize, unitSize, unitSize),
+
+		ivec3(0, 0, unitSize), ivec3(unitSize, 0, unitSize), ivec3(0, unitSize, unitSize), ivec3(unitSize, unitSize, unitSize)
+	};
+	const VCNode* node0 = getNodeByCoord(pos + offsets[dir * 4]);
+	const VCNode* node1 = getNodeByCoord(pos + offsets[dir * 4 + 1]);
+	const VCNode* node2 = getNodeByCoord(pos + offsets[dir * 4 + 2]);
+	const VCNode* node3 = getNodeByCoord(pos + offsets[dir * 4 + 3]);
+	_node0->pos = node0->pos;
+	_node1->pos = node1->pos;
+	_node2->pos = node2->pos;
+	_node3->pos = node3->pos;
 }

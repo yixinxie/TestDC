@@ -71,3 +71,40 @@ void MeshSerializer::serialize(const char* fileName, const vector<glm::vec3>& ve
 	CharHelper::writeTextFile(fileName, outBuffer);
 
 }
+void MeshSerializer::serializeIndexFile(const char* indexPath, const vector<string> fileNames, const vector<glm::ivec4>& coords){
+	rapidjson::Document jsonDoc;
+	jsonDoc.SetObject();
+	rapidjson::Document::AllocatorType& allocator = jsonDoc.GetAllocator();
+	jsonDoc.AddMember("type", "dcindex", allocator);
+	// vertex array
+	rapidjson::Value vertexArray(rapidjson::kArrayType);
+	
+	for (int i = 0; i < fileNames.size(); i++){
+
+		rapidjson::Value objValue;
+		objValue.SetObject();
+		{
+			rapidjson::Value strObj(rapidjson::kStringType);
+			strObj.SetString(fileNames[i].c_str(), allocator);
+			objValue.AddMember("file_name", strObj, allocator);
+		}
+
+		objValue.AddMember("coord_X", coords[i].x, allocator);
+		objValue.AddMember("coord_Y", coords[i].y, allocator);
+		objValue.AddMember("coord_Z", coords[i].z, allocator);
+		objValue.AddMember("coord_W", coords[i].w, allocator);
+		vertexArray.PushBack(objValue, allocator);
+	}
+	jsonDoc.AddMember("files", vertexArray, allocator);
+	// end of data
+
+	rapidjson::StringBuffer strbuf;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+	jsonDoc.Accept(writer);
+
+	CharBuffer outBuffer;
+	outBuffer.buffer = const_cast<char *>(strbuf.GetString());
+	outBuffer.length = strbuf.GetSize();
+
+	CharHelper::writeTextFile(indexPath, outBuffer);
+}

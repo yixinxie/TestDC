@@ -30,7 +30,8 @@ private:
 	// or in the outter ring. pos in world space
 	int adjacencyTypes(ivec3 pos);
 	// pos in world space
-	VoxelChunk* getNodeByCoord(ivec3 pos);
+	const VCNode* getNodeByCoord(ivec3 pos);
+	void getNodesFromInner(ivec3 pos, int dir, VCNode* node0, VCNode* node1, VCNode* node2, VCNode* node3);
 public:
 	ClipmapRing(IVoxelChunkManager* _manager);
 	~ClipmapRing();

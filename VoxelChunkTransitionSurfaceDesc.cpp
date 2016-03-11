@@ -4,11 +4,16 @@ VoxelChunkTransitionSurfaceDesc::VoxelChunkTransitionSurfaceDesc() : indexMap(nu
 	initialized = false;
 }
 VoxelChunkTransitionSurfaceDesc::~VoxelChunkTransitionSurfaceDesc(){
-	if(indexMap != nullptr)delete indexMap;
-	if(seamEdges != nullptr)delete seamEdges;
+	if (indexMap != nullptr)
+	{
+		delete indexMap;
+	}
+	if (seamEdges != nullptr){
+		//delete seamEdges;
+	}
 }
 //
-void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff, int type){
+void VoxelChunkTransitionSurfaceDesc::init(int _lodDiff){
 	
 	initialized = true;
 	if (_lodDiff == -1){
@@ -63,8 +68,8 @@ void VoxelChunkTransitionSurfaceDesc::init1D(int _lodDiff, VoxelChunkTransitionS
 		indexMap = new int[dimInCells * 4];
 		memset(indexMap, -1, dimInCells * 4 * sizeof(int));
 	}
-	
-	int len = flagNumPerCell * dimInCells;
+	// the flag num per cell is different from init2D(init) because the each hinge cell only need 1 edge flag.
+	int len = 1 * dimInCells;
 	seamEdges = new char[len];
 	memset(seamEdges, -1, len);
 }
@@ -82,6 +87,23 @@ void VoxelChunkTransitionSurfaceDesc::gen2D(std::vector<unsigned int>* tempIndic
 				windQuad(edgeA, ind0, ind1, ind2, ind3, tempIndices, inverted);
 				
 			}
+			/*char edgeB = getEdgeFlagB(x, y);
+			if (edgeB != -1)
+			{
+				int ind3 = readIndex2D(x - 1, y, 0);
+				int ind1 = readIndex2D(x, y, 1);
+				int ind2 = readIndex2D(x - 1, y, 1);
+
+				windQuad(edgeB, ind0, ind1, ind2, ind3, tempIndices, !inverted);
+			}*/
+		}
+	}
+
+	for (int y = 0; y < dimInCells; y++){
+		for (int x = 1; x < dimInCells; x++){
+			// first read the vertex index from the original index table.
+			int ind0 = readIndex2D(x, y, 0);
+			
 			char edgeB = getEdgeFlagB(x, y);
 			if (edgeB != -1)
 			{

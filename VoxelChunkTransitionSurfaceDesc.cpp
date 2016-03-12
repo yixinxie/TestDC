@@ -4,12 +4,11 @@ VoxelChunkTransitionSurfaceDesc::VoxelChunkTransitionSurfaceDesc() : indexMap(nu
 	initialized = false;
 }
 VoxelChunkTransitionSurfaceDesc::~VoxelChunkTransitionSurfaceDesc(){
-	if (indexMap != nullptr)
-	{
+	if (indexMap != nullptr){
 		delete indexMap;
 	}
 	if (seamEdges != nullptr){
-		//delete seamEdges;
+		delete seamEdges;	
 	}
 }
 //
@@ -84,6 +83,10 @@ void VoxelChunkTransitionSurfaceDesc::gen2D(std::vector<unsigned int>* tempIndic
 				int ind3 = readIndex2D(x, y - 1, 0);
 				int ind1 = readIndex2D(x, y, 1);
 				int ind2 = readIndex2D(x, y - 1, 1);
+
+				if (ind0 < 0 || ind1 < 0 || ind2 < 0 || ind3 < 0){
+					int sdf = 0;
+				}
 				windQuad(edgeA, ind0, ind1, ind2, ind3, tempIndices, inverted);
 				
 			}

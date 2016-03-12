@@ -111,7 +111,7 @@ void VoxelChunk::generateVertices(){
 	for (int z = 0; z < VoxelConstants::UsableRange; z++){
 		for (int y = 0; y < VoxelConstants::UsableRange; y++){
 			for (int x = 0; x < VoxelConstants::UsableRange; x++){
-				int idx = calcDataIndex(x, y, z);
+				//int idx = calcDataIndex(x, y, z);
 				int usableIndex = calcUsableIndex(x, y, z);
 				solver.reset();
 				vec3 accumNormal;
@@ -206,13 +206,78 @@ void VoxelChunk::generateVertices(){
 		}
 	}
 }
+// note that generateVertices also generate the edge map for the usable range
+// but it does not generate the edge map on the 3 positive surfaces(outside of the usable range), which is needed when 
+// generating the transition desc in case of loddiff = 1.
+void VoxelChunk::generateEdgeMapOnMaxSurface(int surfaceId){
+	VoxelData* base;
+	VoxelData* positive;
+	int c0;
+	int c1;
+	int numUsableRange = VoxelConstants::UsableRange;
+	int* px = nullptr;
+	int* py = nullptr;
+	int* pz = nullptr;
+	ivec3 xincr, yincr;
+	if (surfaceId == 0){
+		px = &numUsableRange;
+		py = &c1;
+		pz = &c0;
+		xincr = ivec3(0, 0, 1);
+		yincr = ivec3(0, 1, 0);
+	}
+	else if (surfaceId == 1){
+		px = &c0;
+		py = &numUsableRange; 
+		pz = &c1;
+		xincr = ivec3(1, 0, 0);
+		yincr = ivec3(0, 0, 1);
+	}
+	else if (surfaceId == 2){
+		px = &c0;
+		py = &c1;
+		pz = &numUsableRange;
+		xincr = ivec3(1, 0, 0);
+		yincr = ivec3(0, 1, 0);
+	}
 
+	for (c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
+		for (c1 = 1; c1 < VoxelConstants::UsableRange; c1++){
+			base = read(*px, *py, *pz);
+			positive = read((*px) + xincr.x, (*py) + xincr.y, (*pz) + xincr.z);
+
+			char xmin = -1;
+			if (base->material == 0 && positive->material != 0)xmin = 1;
+			else if (base->material != 0 && positive->material == 0)xmin = 0;
+
+			// 0 indicates the first axis/edge.
+			int idx = calcSurfaceEdgeMapIndex(c0, c1, surfaceId, 0);
+			surfaceEdgeMap[idx] = xmin;
+		}
+	}
+	for (c0 = 1; c0 < VoxelConstants::UsableRange; c0++){
+		for (c1 = 0; c1 < VoxelConstants::UsableRange; c1++){
+			/*base = read(VoxelConstants::UsableRange, c1, c0);
+			positive = read(VoxelConstants::UsableRange, c1 + 1, c0);*/
+			base = read(*px, *py, *pz);
+			positive = read((*px) + yincr.x, (*py) + yincr.y, (*pz) + yincr.z);
+
+			char ymin = -1;
+			if (base->material == 0 && positive->material != 0)ymin = 1;
+			else if (base->material != 0 && positive->material == 0)ymin = 0;
+
+			// 0 indicates the first axis/edge.
+			int idx = calcSurfaceEdgeMapIndex(c0, c1, surfaceId, 1);
+			surfaceEdgeMap[idx] = ymin;
+		}
+	}
+}
 void VoxelChunk::generateIndices(){
 	tempIndices.clear();
 	for (int z = 0; z < VoxelConstants::UsableRange; z++){
 		for (int y = 0; y < VoxelConstants::UsableRange; y++){
 			for (int x = 0; x < VoxelConstants::UsableRange; x++){
-				int idx = calcDataIndex(x, y, z);
+				//int idx = calcDataIndex(x, y, z);
 				int usableIndex = calcUsableIndex(x, y, z);
 				if (x == 1 && y == 1 && z == 0){
 					int sdf = 0;
@@ -441,6 +506,22 @@ void VoxelChunk::createEdgeDesc2D(int lodDiff, int loc0, int loc1, VoxelChunk* a
 		copyIndicesAndEdgeFlags(vertTranslate, adjChunk, 0, 0, edgeDesc, facing);
 	}
 	else if (lodDiff == 1){
+		if (facing == 0){
+			vertTranslate.x = VoxelConstants::UsableRange;
+			vertTranslate.y = loc1 * -VoxelConstants::UsableRange;
+			vertTranslate.z = loc0 * -VoxelConstants::UsableRange;
+		}
+		else if (facing == 1){
+			vertTranslate.x = loc0 * -VoxelConstants::UsableRange;
+			vertTranslate.y = VoxelConstants::UsableRange;
+			vertTranslate.z = loc1 * -VoxelConstants::UsableRange;
+		}
+		else if (facing == 2){
+			vertTranslate.x = loc0 * -VoxelConstants::UsableRange;
+			vertTranslate.y = loc1 * -VoxelConstants::UsableRange;
+			vertTranslate.z = VoxelConstants::UsableRange;
+		}
+
 		duplicateIndicesAndEdgeFlags(vertTranslate, adjChunk, loc0, loc1, edgeDesc, facing);
 	}
 }
@@ -502,24 +583,26 @@ void VoxelChunk::duplicateIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelCh
 			adjChunk->tempNormals.push_back(normal);
 			// step 2: then store the index in the edge desc structure.
 			// notice that we need to duplicate it four times.
+
 			edgeDesc->writeIndex2D(c0 * 2, c1 * 2, 1, vertIncre);
 			edgeDesc->writeIndex2D(c0 * 2 + 1, c1 * 2, 1, vertIncre);
 			edgeDesc->writeIndex2D(c0 * 2, c1 * 2 + 1, 1, vertIncre);
 			edgeDesc->writeIndex2D(c0 * 2 + 1, c1 * 2 + 1, 1, vertIncre);
 			vertIncre++;
-
-			// here we also duplicate the edge flags four times.
-			char edgeX = edgeMap[usableIndex * 3 + mapping[facing * 2]];
-			char edgeY = edgeMap[usableIndex * 3 + mapping[facing * 2 + 1]];
-			edgeDesc->writeSeamEdgeXY(c0 * 2, c1 * 2,
-				edgeX, edgeY);
-			edgeDesc->writeSeamEdgeXY(c0 * 2 + 1, c1 * 2,
-				edgeX, edgeY);
-			edgeDesc->writeSeamEdgeXY(c0 * 2, c1 * 2 + 1,
-				edgeX, edgeY);
-			edgeDesc->writeSeamEdgeXY(c0 * 2 + 1, c1 * 2 + 1,
-				edgeX, edgeY);
 		}
+	}
+	adjChunk->generateEdgeMapOnMaxSurface(0);
+	adjChunk->generateEdgeMapOnMaxSurface(1);
+	adjChunk->generateEdgeMapOnMaxSurface(2);
+	for (int c1 = 0; c1 < VoxelConstants::UsableRange; c1++){
+		for (int c0 = 0; c0 < VoxelConstants::UsableRange; c0++){
+			int usableIndex = 0;
+			usableIndex = adjChunk->calcSurfaceEdgeMapIndex(c0, c1, facing, 0);
 
+			char edgeX = adjChunk->surfaceEdgeMap[usableIndex];
+			char edgeY = adjChunk->surfaceEdgeMap[usableIndex + 1];
+
+			edgeDesc->writeSeamEdgeXY(c0, c1, edgeX, edgeY);
+		}
 	}
 }

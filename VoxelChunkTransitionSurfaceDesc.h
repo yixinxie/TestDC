@@ -82,9 +82,6 @@ public:
 		indexMap[x * 4 + columnId] = index;
 	}
 	
-	
-	
-
 	int getDim(void);
 
 	float vertScale;

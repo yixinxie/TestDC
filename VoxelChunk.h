@@ -20,6 +20,14 @@ private:
 	int indexMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange];
 	// this can be optimized to use only 3 * 3 * VoxelConstants::UsableRange ^ 2 chars.
 	char edgeMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * VoxelConstants::UsableRange * 3];
+
+	// dim x dim x number of surfaces x number of edges.
+	char surfaceEdgeMap[VoxelConstants::UsableRange * VoxelConstants::UsableRange * 3 * 2];
+	// surfaceId is the index of the surface; edgeNum is the index of the axis/edge.
+	inline int calcSurfaceEdgeMapIndex(int x, int y, int surfaceId, int edgeNum){
+		return ((x + y * VoxelConstants::UsableRange) * 3 + surfaceId) * 2 + edgeNum;
+
+	}
 	VoxelChunkTransitionSurfaceDesc edgeDescs[6];
 	// mesh data, may move these to a different class in the future
 	std::vector<vec3> tempVertices;
@@ -70,6 +78,7 @@ private:
 	// helper functions for createEdgeDesc2D
 	void duplicateIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
 	void copyIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
+	void generateEdgeMapOnMaxSurface(int surfaceId);
 	
 public:
 

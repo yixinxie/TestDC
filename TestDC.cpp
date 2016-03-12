@@ -53,6 +53,11 @@ void testClipmap(void){
 }
 void main(void){
 	// third experiment
+	char* tt = new char[100];
+	for (int i = 0; i < 100; i++){
+		tt[i] = -1;
+	}
+	delete tt;
 	if (true){
 		SF_Box sampler;// = new SF_Box();
 		sampler.setSpecs(vec3(2.25f, 2.25f, 2.25f), vec3(6.5f, 6.5f, 6.5f));
@@ -101,17 +106,14 @@ void main(void){
 			chunk2->createEdgeDesc2D(1, 1, 1, base, 2);
 		}
 		// hinges
+		if (false)
 		{
 			// paralelle to the z-axis
 			chunk0 = vm.readChunk(4, 4, 0, 1);
 			chunk0->createEdgeDesc1D(1, 1, base, 5);
-		}
-		{
 			// paralelle to the x-axis
 			chunk0 = vm.readChunk(0, 4, 4, 1);
 			chunk0->createEdgeDesc1D(1, 1, base, 3);
-		}
-		{
 			// paralelle to the y-axis
 			chunk0 = vm.readChunk(4, 0, 4, 1);
 			chunk0->createEdgeDesc1D(1, 1, base, 4);

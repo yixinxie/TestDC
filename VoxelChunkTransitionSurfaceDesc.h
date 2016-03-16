@@ -59,6 +59,8 @@ public:
 	surface (1) indicates the neighbour index slice.
 	*/
 	// 2D
+	int readIndex2D_X(int x, int maxX);
+	int readIndex2D_Y(int y, int maxY);
 	inline int readIndex2D(int x, int y, int surfaceId){
 		return indexMap[calcIndex(x, y) * 2 + surfaceId];
 	}
@@ -81,6 +83,8 @@ public:
 	inline void writeIndex1D(int x, int columnId, int index){
 		indexMap[x * 4 + columnId] = index;
 	}
+	void writeIndex1D_Dupe2(int x, int maxX, int columnId, int index);
+	void writeIndex1D_Dupe(int x, int columnId, int index);
 	
 	int getDim(void);
 

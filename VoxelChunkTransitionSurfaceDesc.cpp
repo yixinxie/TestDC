@@ -84,9 +84,9 @@ void VoxelChunkTransitionSurfaceDesc::gen2D(std::vector<unsigned int>* tempIndic
 				int ind1 = readIndex2D(x, y, 1);
 				int ind2 = readIndex2D(x, y - 1, 1);
 
-				if (ind0 < 0 || ind1 < 0 || ind2 < 0 || ind3 < 0){
-					int sdf = 0;
-				}
+				//if (ind0 < 0 || ind1 < 0 || ind2 < 0 || ind3 < 0){
+				//	int sdf = 0;
+				//}
 				windQuad(edgeA, ind0, ind1, ind2, ind3, tempIndices, inverted);
 				
 			}
@@ -157,4 +157,42 @@ void VoxelChunkTransitionSurfaceDesc::windQuad(int edge, int ind0, int ind1, int
 }
 int VoxelChunkTransitionSurfaceDesc::getDim(){
 	return dimInCells;
+}
+// maxX is either equal to dimInCells, or twice as large.
+// columnId is either 0 or 1.
+int VoxelChunkTransitionSurfaceDesc::readIndex2D_X(int x, int maxX){
+	int ret;
+
+	if (maxX > dimInCells){
+		int halfX = x >> 1;
+		ret = readIndex2D(halfX, dimInCells - 1, 1);
+	}
+	else{
+		ret = readIndex2D(x, dimInCells - 1, 1);
+	}
+	return ret;
+}
+int VoxelChunkTransitionSurfaceDesc::readIndex2D_Y(int y, int maxY){
+	int ret;
+
+	if (maxY> dimInCells){
+		int halfY = y >> 1;
+		ret = readIndex2D(dimInCells - 1, halfY, 1);
+	}
+	else{
+		ret = readIndex2D(dimInCells - 1, y, 1);
+	}
+	return ret;
+}
+void VoxelChunkTransitionSurfaceDesc::writeIndex1D_Dupe2(int x, int maxX, int columnId, int index){
+	int scaler = (dimInCells / maxX) - 1;
+	indexMap[x * 4 + columnId] = index;
+	indexMap[(x + scaler) * 4 + columnId] = index;
+}
+
+void VoxelChunkTransitionSurfaceDesc::writeIndex1D_Dupe(int x, int columnId, int index){
+	int scaler = (dimInCells / VoxelConstants::UsableRange) - 1;
+	indexMap[x * 4 + columnId] = index;
+	indexMap[(x + scaler)* 4 + columnId] = index;
+
 }

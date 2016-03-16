@@ -80,6 +80,13 @@ private:
 	void copyIndicesAndEdgeFlags(const vec3& vertTranslate, VoxelChunk* adjChunk, int loc0, int loc1, VoxelChunkTransitionSurfaceDesc* edgeDesc, int facing);
 	void generateEdgeMapOnMaxSurface(int surfaceId);
 	
+	// helper functions for createEdgeDesc1D
+	int readIndex_X(int c, int maxDim);
+	int readIndex_Y(int c, int maxDim);
+	int readIndex_Z(int c, int maxDim);
+	void _1DPhase_MinusOne(const vec3& vertTranslate, VoxelChunk* baseChunk, int loc0, VoxelChunkTransitionSurfaceDesc* edgeDesc, int type);
+	void _1DPhase_Zero(const vec3& vertTranslate, VoxelChunk* baseChunk, VoxelChunkTransitionSurfaceDesc* edgeDesc, int type);
+	void _1DPhase_PlusOne(const vec3& vertTranslate, VoxelChunk* baseChunk, int loc0, VoxelChunkTransitionSurfaceDesc* edgeDesc, int type);
 public:
 
 	VoxelChunk(void);
@@ -100,5 +107,5 @@ public:
 	void customSDF(int x, int y, int z, int w, SamplerFunction* sampler);
 	void createEdgeDesc1D(const int lodDiff, const int loc0, VoxelChunk* adjChunk, const int facing);
 
-	void createEdgeDesc2D(const int lodDiff, const int loc0, const int loc1, VoxelChunk* adjChunk, const int facing);
+	void createEdgeDesc2D(const int lodDiff, const int loc0, const int loc1, VoxelChunk* baseChunk, const int facing);
 };
